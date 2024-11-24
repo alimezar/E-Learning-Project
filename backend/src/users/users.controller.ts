@@ -1,16 +1,17 @@
 import { Controller, Post, Get, Body, Param, Put, Delete } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { Users } from './users.schema'; // Ensure this matches the schema or class
+import { CreateUserDto } from './dto/create-users.dto';
+import { Users } from './users.schema'; 
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // Create a new user
   @Post()
-  async createUser(@Body() userData: Partial<Users>): Promise<Users> {
-    return this.usersService.createUser(userData);
+  async createUser(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.createUser(createUserDto);
   }
+}
 
   // Get all users
   @Get()
