@@ -16,6 +16,12 @@ export class Progress {
 
   @Prop({ default: [] })
   completedModules: string[]; 
+
+  @Prop({ required: true, default: () => new Date() })
+  last_accessed: Date;
+  @Prop({ required: true })
+  progressId: string;
+
 }
 
 export const ProgressSchema = SchemaFactory.createForClass(Progress);

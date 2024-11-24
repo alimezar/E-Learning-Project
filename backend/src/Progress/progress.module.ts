@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { MongooseModule } from '@nestjs/mongoose';//mongoose
 import { Progress, ProgressSchema } from './progress.schema';
 import { ProgressService } from './progress.service';
 
@@ -8,4 +8,5 @@ import { ProgressService } from './progress.service';
   providers: [ProgressService],
   exports: [ProgressService], 
 })
+
 export class ProgressModule {}
