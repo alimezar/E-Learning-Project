@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Put, Delete, HttpException, HttpStatus } from '@nestjs/common';
 import { QuizService } from './quizzes.service';
 import { Quizzes } from './quizzes.schema';
 
@@ -9,33 +9,46 @@ export class QuizController {
   // Create a new quiz
   @Post()
   async createQuiz(@Body() quizData: Partial<Quizzes>): Promise<Quizzes> {
-    return this.quizService.createQuiz(quizData);
+    try {
+      return await this.quizService.createQuiz(quizData);
+    } catch (error) {
+      throw new HttpException(error.message, error.status || HttpStatus.BAD_REQUEST);
+    }
   }
 
-  // Get all the quizzes
+  // Get all quizzes
   @Get()
   async getQuizzes(): Promise<Quizzes[]> {
     return this.quizService.getQuizzes();
   }
 
-  // Get one quiz by its ID
+  // Get a single quiz by ID
   @Get(':id')
   async getQuiz(@Param('id') quizId: string): Promise<Quizzes> {
     return this.quizService.getQuizById(quizId);
   }
 
-  // Update a quiz by its ID
+  // Update a quiz by ID
   @Put(':id')
   async updateQuiz(
     @Param('id') quizId: string,
     @Body() updateData: Partial<Quizzes>,
   ): Promise<Quizzes> {
-    return this.quizService.updateQuiz(quizId, updateData);
+    try {
+      return await this.quizService.updateQuiz(quizId, updateData);
+    } catch (error) {
+      throw new HttpException(error.message, error.status || HttpStatus.NOT_FOUND);
+    }
   }
 
-  // Delete a quiz by its ID
+  // Delete a quiz by ID
   @Delete(':id')
-  async deleteQuiz(@Param('id') quizId: string): Promise<void> {
-    await this.quizService.deleteQuiz(quizId);
+  async deleteQuiz(@Param('id') quizId: string): Promise<{ message: string }> {
+    try {
+      await this.quizService.deleteQuiz(quizId);
+      return { message: `Quiz with ID "${quizId}" successfully deleted.` };
+    } catch (error) {
+      throw new HttpException(error.message, error.status || HttpStatus.NOT_FOUND);
+    }
   }
 }

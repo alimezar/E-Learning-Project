@@ -8,5 +8,6 @@ import { CoursesController } from './courses.controller';
   imports: [MongooseModule.forFeature([{ name: Course.name, schema: CourseSchema }])],
   providers: [CoursesService],
   controllers: [CoursesController],
+  exports: [MongooseModule],
 })
 export class CoursesModule {}

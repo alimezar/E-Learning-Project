@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { ResponseService } from './responses.services';
 import { Response } from './responses.schema';
 
@@ -8,7 +8,11 @@ export class ResponseController {
 
   @Post()
   async createResponse(@Body() createResponseDto: Partial<Response>) {
-    return this.responseService.createResponse(createResponseDto);
+    try {
+      return await this.responseService.createResponse(createResponseDto);
+    } catch (error) {
+      throw new HttpException(error.message, error.status || HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Get()
