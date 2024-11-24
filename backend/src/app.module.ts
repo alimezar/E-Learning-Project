@@ -5,9 +5,10 @@ import { AppService } from './app.service';
 import { CoursesModule } from './courses/courses.module';
 import { UsersModule } from './users/users.module';
 import { QuizModule } from './quizzes/quizzes.module';
+import { ProgressModule } from './progress/progress.module';
 
 @Module({                         //copy below in mongodb compass should connect you with database if not tell koshty :)
-  imports: [MongooseModule.forRoot('mongodb+srv://koshty:Pm07DIXleojhZaqD@e-learning.k67sj.mongodb.net/e-learning'), CoursesModule,UsersModule,QuizModule],
+  imports: [MongooseModule.forRoot('mongodb+srv://koshty:Pm07DIXleojhZaqD@e-learning.k67sj.mongodb.net/e-learning'), CoursesModule,UsersModule,QuizModule,ProgressModule],
   controllers: [AppController],
   providers: [AppService],
 })
