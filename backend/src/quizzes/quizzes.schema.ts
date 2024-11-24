@@ -1,12 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type QuizDocument = Quizzes & Document;
 
 @Schema()
 export class Quizzes {
-  @Prop({ required: true })
-  module_id: string;
+  @Prop({ type: Types.ObjectId, ref: 'Module', required: true }) 
+  moduleId: Types.ObjectId;
 
   @Prop({ type: [Object], required: true })
   questions: Record<string, any>[];
