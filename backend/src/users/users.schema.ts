@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type UserDocument = Users & Document;
 
@@ -19,6 +19,11 @@ export class Users {
 
   @Prop()
   profilePictureUrl?: string;
+}
+
+
+export interface Users {
+  _id: Types.ObjectId;
 }
 
 export const UserSchema = SchemaFactory.createForClass(Users);
