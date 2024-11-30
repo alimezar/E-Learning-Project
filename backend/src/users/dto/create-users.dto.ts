@@ -11,7 +11,7 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
-  passwordHash: string;
+  password: string;
 
   @IsEnum(['student', 'instructor', 'admin'])
   role: 'student' | 'instructor' | 'admin';
