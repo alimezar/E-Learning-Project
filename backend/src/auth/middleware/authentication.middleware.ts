@@ -1,24 +1,21 @@
-import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { UnauthorizedException } from '@nestjs/common/exceptions/unauthorized.exception';
 import { Request, Response, NextFunction } from 'express';
+import { verify } from 'jsonwebtoken';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-@Injectable()
-export class AuthMiddleware implements NestMiddleware {
-  constructor(private jwtService: JwtService) {}
+export function AuthenticationMiddleware(req: Request, res: Response, next: NextFunction) {
+  const token = req.cookies?.token || req.headers['authorization']?.split(' ')[1];
 
-  async use(req: Request, res: Response, next: NextFunction) {
-    const token = req.headers['authorization']?.split(' ')[1];  
+  if (!token) {
+    throw new UnauthorizedException('Authentication token missing');
+  }
 
-    if (!token) {
-      throw new UnauthorizedException('No token found');
-    }
-
-    try {
-      const decoded = await this.jwtService.verifyAsync(token);
-      req.user = decoded;  // Attach user to request object
-      next();
-    } catch (error) {
-      throw new UnauthorizedException('Invalid token');
-    }
+  try {
+    const decoded: any = verify(token, String(process.env.JWT_SECRET));
+    req['user'] = decoded.user; // Attach user payload to the request object
+    next(); 
+  } catch (err) {
+    throw new UnauthorizedException('Invalid or expired token');
   }
 }
