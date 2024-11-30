@@ -36,7 +36,7 @@ export default function Login() {
       }
   
       const result = await response.json();
-      router.push('/courses');
+      router.push('/profile');
     } catch (error: any) {
       setErrorMessage(error.message);
     }
