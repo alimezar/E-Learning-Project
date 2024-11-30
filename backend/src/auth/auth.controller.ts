@@ -4,13 +4,17 @@ import {
     HttpStatus,
     Post,
     HttpException,
+    Get,
     Res,
     Req,
+    UseGuards
   } from '@nestjs/common';
   import { AuthService } from './auth.service';
   import { SignUpDto } from './dto/sign-up.dto';
   import { LoginDto } from './dto/login.dto';
   import { Response } from 'express';
+  import { AuthGuard } from './guards/authentication.guard';
+
   
   @Controller('auth')
   export class AuthController {
@@ -23,40 +27,38 @@ import {
       @Res({ passthrough: true }) res: Response,
     ) {
       try {
-        console.log('Login attempt:', signInDto.email);
         const result = await this.authService.signIn(
           signInDto.email,
           signInDto.password,
         );
-  
-        // Set the token as an HTTP-only cookie
+    
+        // Store the JWT as an HTTP-only cookie
         res.cookie('token', result.accessToken, {
-          httpOnly: true,
+          httpOnly: true, // Protect against XSS
+          secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
+          maxAge: 3600 * 1000, // 1 hour
+        });
+    
+        // Store user details in a separate cookie for client-side access
+        res.cookie('user', JSON.stringify(result.userPayload), {
+          httpOnly: false, // Allow client-side access
+          signed: true, // Adds a signature
           secure: process.env.NODE_ENV === 'production',
           maxAge: 3600 * 1000, // 1 hour
         });
-  
+    
         return {
           statusCode: HttpStatus.OK,
           message: 'Login successful',
-          user: result.userPayload,
         };
       } catch (error) {
-        console.error('Login error:', error.message);
-  
-        if (error instanceof HttpException) {
-          throw error; // Pass through known exceptions
-        }
-  
         throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            message: 'An error occurred during login',
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+          { message: error.message || 'Login failed' },
+          error.status || HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
     }
+    
   
     // Registration Endpoint
     @Post('register')
@@ -92,5 +94,6 @@ import {
         );
       }
     }
-  }
+}
+  
   
