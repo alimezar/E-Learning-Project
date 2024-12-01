@@ -14,6 +14,7 @@ import {
   import { LoginDto } from './dto/login.dto';
   import { Response } from 'express';
   import { AuthGuard } from './guards/authentication.guard';
+  
 
   
   @Controller('auth')
@@ -42,7 +43,6 @@ import {
         // Store user details in a separate cookie for client-side access
         res.cookie('user', JSON.stringify(result.userPayload), {
           httpOnly: false, // Allow client-side access
-          signed: true, // Adds a signature
           secure: process.env.NODE_ENV === 'production',
           maxAge: 3600 * 1000, // 1 hour
         });

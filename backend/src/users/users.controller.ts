@@ -45,4 +45,14 @@ async getUserByEmail(@Param('email') email: string): Promise<Users> {
   async deleteUser(@Param('id') id: string): Promise<void> {
     return this.usersService.deleteUser(id);
   }
+  // Enroll a user in a course
+  @Post(':userId/enroll/:courseId')
+  async enrollUser(
+    @Param('userId') userId: string,
+    @Param('courseId') courseId: string,
+  ): Promise<Users> {
+    return this.usersService.enrollUser(userId, courseId);
+
+  }
+
 }

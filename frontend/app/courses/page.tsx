@@ -13,10 +13,12 @@ export default function CoursesPage() {
     // Fetch all courses from the backend API
     const fetchCourses = async () => {
       try {
+        console.log('Fetching courses...');
         const response = await fetch('http://localhost:3001/courses');
         const data = await response.json();
 
         if (response.ok) {
+          console.log('Courses fetched successfully:', data);
           setCourses(data); // No filtering by availability here
           setFilteredCourses(data);
         } else {
@@ -33,6 +35,7 @@ export default function CoursesPage() {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
+    console.log('Search term:', value);
 
     // Filter courses by title or instructor
     const filtered = courses.filter(
@@ -41,15 +44,61 @@ export default function CoursesPage() {
         course.createdBy.toLowerCase().includes(value.toLowerCase())
     );
 
+    console.log('Filtered courses:', filtered);
     setFilteredCourses(filtered);
   };
 
-  const handleEnroll = (courseId: string) => {
-    if (!enrolledCourses.includes(courseId)) {
-      setEnrolledCourses([...enrolledCourses, courseId]);
-      setConfirmationMessage('Successfully enrolled in the course!');
-    } else {
-      setConfirmationMessage('You are already enrolled in this course.');
+  const handleEnroll = async (courseId: string) => {
+    console.log('Attempting to enroll in course with ID:', courseId);
+
+    // Extract the 'user' cookie
+    const cookies = document.cookie.split('; ');
+    console.log('Cookies:', cookies);
+
+    const userCookie = cookies.find((cookie) => cookie.startsWith('user='));
+    if (!userCookie) {
+      console.log('User cookie not found');
+      setConfirmationMessage('Please log in to enroll in courses.');
+      return;
+    }
+
+    console.log('User cookie found:', userCookie);
+
+    try {
+      // Parse the user cookie to get the user ID
+      const userData = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
+      console.log('Parsed user data:', userData);
+
+      const userId = userData.id;
+      if (!userId) {
+        console.log('Invalid user ID:', userId);
+        setConfirmationMessage('Invalid user information.');
+        return;
+      }
+
+      console.log('User ID:', userId);
+
+      // Send enrollment request to the backend
+      const response = await fetch(`http://localhost:3001/users/${userId}/enroll/${courseId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ courseId })
+      });
+
+      const result = await response.json();
+      console.log('Backend response:', result);
+
+      if (response.ok) {
+        setEnrolledCourses([...enrolledCourses, courseId]);
+        setConfirmationMessage(result.message || 'Successfully enrolled in the course!');
+      } else {
+        setConfirmationMessage(result.message || 'Failed to enroll in the course.');
+      }
+    } catch (error) {
+      console.error('Failed to parse user cookie or enroll in course:', error);
+      setConfirmationMessage('An error occurred while processing your enrollment.');
     }
   };
 
@@ -81,9 +130,12 @@ export default function CoursesPage() {
               <p style={styles.courseDescription}>{course.description}</p>
               <button
                 style={styles.enrollButton}
-                onClick={() => handleEnroll(course.id)}
+                onClick={() => {
+                  console.log('Clicked enroll button for course ID:', course._id);
+                  handleEnroll(course._id);
+                }}
               >
-                {enrolledCourses.includes(course.id) ? 'Already Enrolled' : 'Enroll'}
+                {enrolledCourses.includes(course._id) ? 'Already Enrolled' : 'Enroll'}
               </button>
             </div>
           ))
