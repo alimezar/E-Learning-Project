@@ -7,7 +7,7 @@ export type ModuleDocument = Module & Document;
 @Schema({ timestamps: true })
 export class Module {
   @Prop({ type: Types.ObjectId, ref: 'Course', required: true }) 
-  courseId: Course;
+  course_id: Types.ObjectId;
 
   @Prop({ required: true })
   title: string;

@@ -20,6 +20,10 @@ export class CoursesService {
     return this.courseModel.find().exec();
   }
 
+  async getCoursesByUserId(userId: string): Promise<Course[]> {
+    return this.courseModel.find({ enrolledUsers: userId }).exec();
+  }
+
   // Get a single course by ID
   async getCourseById(id: string): Promise<Course> {
     return this.courseModel.findById(id).exec();

@@ -69,7 +69,7 @@ export class UsersService {
 
     // Check if user is already enrolled
     if (user.enrolledCourses.includes(courseObjectId)) {
-      throw new BadRequestException(`User is already enrolled in this course`);
+      throw new BadRequestException(`You are already enrolled in this course!`);
     }
 
     user.enrolledCourses.push(courseObjectId);
