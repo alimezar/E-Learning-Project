@@ -19,6 +19,13 @@ export class ModulesController {
     return this.modulesService.getAllModules();
   }
 
+  
+  @Get('course/:courseId')
+  async getModulesByCourseId(@Param('courseId') courseId: string): Promise<Module[]> {
+    return this.modulesService.getModulesByCourseId(courseId);
+  }
+  
+
   // Get a single module by MongoDB _id
   @Get(':id')
   async getModuleById(@Param('id') id: string): Promise<Module> {

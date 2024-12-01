@@ -71,6 +71,9 @@ export default function ProfilePage() {
               ...(dropdownVisible ? styles.dropdownContentVisible : {}),
             }}
           >
+            <a href="/profile/coursesDashboard" style={styles.dropdownLink}>
+              Course Dashboard
+            </a>
             <a href="/profile/preferences" style={styles.dropdownLink}>
               Preferences
             </a>

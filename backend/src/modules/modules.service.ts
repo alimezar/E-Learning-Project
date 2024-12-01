@@ -20,7 +20,7 @@ export class ModulesService {
 
   // Create a new module
   async createModule(moduleData: Partial<Module>): Promise<Module> {
-    await this.validateCourseId(moduleData.courseId.toString());
+    await this.validateCourseId(moduleData.course_id.toString());
     const newModule = new this.moduleModel(moduleData);
     return newModule.save();
   }
@@ -29,6 +29,10 @@ export class ModulesService {
   async getAllModules(): Promise<Module[]> {
     return this.moduleModel.find().populate('courseId').exec(); 
   }
+  async getModulesByCourseId(courseId: string): Promise<Module[]> {
+    return this.moduleModel.find({ course_id: courseId }).exec();
+  }
+  
 
   // Get a module by ID
   async getModuleById(_id: string): Promise<Module> {
@@ -40,8 +44,8 @@ export class ModulesService {
   }
 
   async updateModule(_id: string, updateData: Partial<Module>): Promise<Module> {
-    if (updateData.courseId) {
-      await this.validateCourseId(updateData.courseId.toString());
+    if (updateData.course_id) {
+      await this.validateCourseId(updateData.course_id.toString());
     }
     const updatedModule = await this.moduleModel
       .findByIdAndUpdate(_id, updateData, { new: true })
