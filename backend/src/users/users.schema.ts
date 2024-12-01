@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
+
 export type UserDocument = Users & Document;
 
 @Schema({ timestamps: true })
@@ -19,6 +20,9 @@ export class Users {
 
   @Prop()
   profilePictureUrl?: string;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Course' }] }) // Reference to Course schema
+  enrolledCourses: Types.ObjectId[]; 
 }
 
 
