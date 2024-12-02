@@ -2,6 +2,7 @@ import { Controller, Post, Get, Body, Param, Put, Delete } from '@nestjs/common'
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-users.dto';
 import { Users } from './users.schema'; 
+import { Course } from 'src/courses/courses.schema';
 
 @Controller('users')
 export class UsersController {
@@ -52,7 +53,11 @@ async getUserByEmail(@Param('email') email: string): Promise<Users> {
     @Param('courseId') courseId: string,
   ): Promise<Users> {
     return this.usersService.enrollUser(userId, courseId);
-
   }
-
+  // Fetch enrolled courses for a user
+@Get(':userId/enrolled-courses')
+async getUserEnrolledCourses(@Param('userId') userId: string): Promise<Course[]> {
+  return this.usersService.getEnrolledCourses(userId);
+}
+  
 }
