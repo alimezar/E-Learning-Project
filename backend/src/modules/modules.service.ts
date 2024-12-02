@@ -64,4 +64,13 @@ export class ModulesService {
       throw new NotFoundException(`Module with ID "${_id}" not found`);
     }
   }
+  async getModulesByCourseIdWithCourseDetails(courseId: string): Promise<{ courseId: string; modules: Module[] }> {
+    const course = await this.courseModel.findById(courseId).exec();
+    if (!course) {
+      throw new NotFoundException(`Course with ID "${courseId}" not found`);
+    }
+
+    const modules = await this.moduleModel.find({ course_id: courseId }).exec();
+    return { courseId, modules };
+  }
 }

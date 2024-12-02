@@ -75,4 +75,14 @@ export class UsersService {
     user.enrolledCourses.push(courseObjectId);
     return await user.save();
   }
+
+  async getEnrolledCourses(userId: string): Promise<Course[]> {
+    const user = await this.getUserById(userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+  
+    return await this.courseModel.find({ _id: { $in: user.enrolledCourses } }).exec();
+  }
+  
 }

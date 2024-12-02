@@ -1,4 +1,4 @@
-import {Controller, Get, Post, Put, Delete, Param, Body, HttpException, HttpStatus} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { ModulesService } from './modules.service';
 import { Module } from './modules.schema';
 
@@ -20,10 +20,7 @@ export class ModulesController {
   }
 
   
-  @Get('course/:courseId')
-  async getModulesByCourseId(@Param('courseId') courseId: string): Promise<Module[]> {
-    return this.modulesService.getModulesByCourseId(courseId);
-  }
+  
   
 
   // Get a single module by MongoDB _id
@@ -54,5 +51,9 @@ export class ModulesController {
     } catch (error) {
       throw new HttpException(error.message, error.status || HttpStatus.NOT_FOUND);
     }
+  }
+  @Get('course/:courseId')
+  async getModulesByCourseId(@Param('courseId') courseId: string): Promise<{ courseId: string; modules: Module[] }> {
+    return this.modulesService.getModulesByCourseIdWithCourseDetails(courseId);
   }
 }
