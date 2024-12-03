@@ -9,7 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 
-@WebSocketGateway({ cors: {     origin: "http://localhost",  // Or your frontend URL
+@WebSocketGateway({ cors: {     origin: "*",  // Or your frontend URL
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"], credentials: true } })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
