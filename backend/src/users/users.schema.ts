@@ -23,6 +23,9 @@ export class Users {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Course' }] }) // Reference to Course schema
   enrolledCourses: Types.ObjectId[]; 
+  
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Course' }] }) // Reference to Course schema
+  coursesTaught: Types.ObjectId[]; 
 }
 
 
