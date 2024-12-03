@@ -1,6 +1,7 @@
-import { Controller, Post, Get, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Put, Delete, Query,UnauthorizedException } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { Course } from './courses.schema';
+import { Users } from 'src/users/users.schema';
 
 @Controller('courses')
 export class CoursesController {
@@ -43,4 +44,35 @@ async getUserCourses(@Param('userId') userId: string): Promise<Course[]> {
   async deleteCourse(@Param('id') id: string): Promise<void> {
     return this.coursesService.deleteCourse(id);
   }
+  // Search courses by query
+@Get('search/:query')
+async searchCourses(@Param('query') query: string): Promise<Course[]> {
+  return this.coursesService.searchCourses(query);
+}
+
+// Update course with versioning
+@Put(':id/version')
+async updateCourseWithVersion(
+  @Param('id') id: string,
+  @Body() updateData: Partial<Course>,
+): Promise<Course> {
+  return this.coursesService.updateCourseWithVersion(id, updateData);
+}
+// Search for a student in a specific course
+
+@Get(':courseId/students/search')
+async searchStudentsInCourse(
+  @Param('courseId') courseId: string,
+  @Query('email') email: string,
+) {
+  return this.coursesService.searchStudentInCourse(courseId, email);
+}
+@Get(':courseId/instructors/search')
+async searchInstructorInCourse(
+  @Param('courseId') courseId: string,
+  @Query('name') name: string,
+) {
+  return this.coursesService.searchInstructorInCourse(courseId, name);
+}
+
 }

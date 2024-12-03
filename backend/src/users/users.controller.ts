@@ -59,5 +59,13 @@ async getUserByEmail(@Param('email') email: string): Promise<Users> {
 async getUserEnrolledCourses(@Param('userId') userId: string): Promise<Course[]> {
   return this.usersService.getEnrolledCourses(userId);
 }
+
+@Post(':userId/enrollInstructor/:courseId')
+  async enrollInstructor(
+    @Param('userId') userId: string,
+    @Param('courseId') courseId: string,
+  ): Promise<Users> {
+    return this.usersService.enrollInstructor(userId, courseId);
+  }
   
 }

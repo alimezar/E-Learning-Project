@@ -76,6 +76,30 @@ export class UsersService {
     return await user.save();
   }
 
+  async enrollInstructor(userId: string, courseId: string): Promise<Users> {
+    // Ensure IDs are properly cast to ObjectId
+    const userObjectId = new Types.ObjectId(userId);
+    const courseObjectId = new Types.ObjectId(courseId);
+
+    const user = await this.userModel.findById(userObjectId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const course = await this.courseModel.findById(courseObjectId);
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    // Check if user is already enrolled
+    if (user.coursesTaught.includes(courseObjectId)) {
+      throw new BadRequestException(`You are already Teaching this Course!`);
+    }
+
+    user.coursesTaught.push(courseObjectId);
+    return await user.save();
+  }
+
   async getEnrolledCourses(userId: string): Promise<Course[]> {
     const user = await this.getUserById(userId);
     if (!user) {
