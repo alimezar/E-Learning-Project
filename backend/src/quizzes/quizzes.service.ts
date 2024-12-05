@@ -26,10 +26,11 @@ export class QuizService {
     if (!quizData.moduleId) {
       throw new BadRequestException('moduleId is required');
     }
-    const moduleId = new Types.ObjectId(quizData.moduleId); // Convert to ObjectId
-    await this.validateModuleId(moduleId); // Validate moduleId
+    const checkModuleId = new Types.ObjectId(quizData.moduleId); // Convert to ObjectId
+    await this.validateModuleId(checkModuleId); // Validate moduleId
 
-    const difficulty = 'easy'; // difficulty for now (temporary)
+    const moduleId = quizData.moduleId.toString();
+    const difficulty = "easy"; // difficulty for now (temporary)
 
     const questions = await this.questionModel.aggregate([  
       { $match: { moduleId, difficulty } }, // get questions by moduleId and difficulty

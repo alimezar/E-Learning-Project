@@ -20,7 +20,7 @@ export class Questions {
   @Prop({ type: String, required: true })
   answer: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String})
   choice: string;                          // this is the attribute that holds the option that the user chose 
 }
 
