@@ -19,6 +19,9 @@ export class Questions {
 
   @Prop({ type: String, required: true })
   answer: string;
+
+  @Prop({ type: String, required: true })
+  choice: string;                          // this is the attribute that holds the option that the user chose 
 }
 
 export const QuestionSchema = SchemaFactory.createForClass(Questions);

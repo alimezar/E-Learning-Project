@@ -10,8 +10,8 @@ export class QuestionsService {
   ) {}
 
   // Create a new question
-  async createQuestion(createQuestionDto: any): Promise<Questions> {
-    const newQuestion = new this.questionModel(createQuestionDto);
+  async createQuestion(questionData: Partial<Questions>): Promise<Questions> {
+    const newQuestion = new this.questionModel(questionData);
     return newQuestion.save();
   }
 
