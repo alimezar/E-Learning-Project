@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Quizzes, QuizDocument } from './quizzes.schema';
 import { Module, ModuleDocument } from '../modules/modules.schema';
+import { Questions, QuestionDocument } from '../questions/questions.schema';
 import { Model, Types } from 'mongoose';
 
 @Injectable()
@@ -9,6 +10,7 @@ export class QuizService {
   constructor(
     @InjectModel('Quizzes') private readonly quizModel: Model<QuizDocument>,
     @InjectModel('Module') private readonly moduleModel: Model<ModuleDocument>, // Inject Module model
+    @InjectModel('Questions') private readonly questionModel: Model<QuestionDocument>, //inject Question model
   ) {}
 
   // Validate moduleId
@@ -26,7 +28,19 @@ export class QuizService {
     }
     const moduleId = new Types.ObjectId(quizData.moduleId); // Convert to ObjectId
     await this.validateModuleId(moduleId); // Validate moduleId
-    const newQuiz = new this.quizModel({ ...quizData, moduleId });
+
+    const difficulty = 'easy'; // difficulty for now (temporary)
+
+    const questions = await this.questionModel.aggregate([  
+      { $match: { moduleId, difficulty } }, // get questions by moduleId and difficulty
+      { $sample: { size: 5 } } // Randomly pick 5 questions
+    ]);
+
+    if (questions.length < 5) { // to ensure that we have enough questions
+      throw new BadRequestException('Not enough questions available to create a quiz.');
+    }
+
+    const newQuiz = new this.quizModel({ ...quizData, moduleId, questions });
     return newQuiz.save();
   }
 
