@@ -13,14 +13,6 @@ export class Response {
   @Prop({ type: Types.ObjectId, ref: 'Quizzes', required: true }) // Reference to Quizzes schema
   quizId: Types.ObjectId;
 
-  @Prop([
-    {
-      questionId: { type: String, required: true },
-      answer: { type: String, required: true },
-    },
-  ])
-  answers: { questionId: string; answer: string }[];
-
   @Prop()
   score?: number;
 }

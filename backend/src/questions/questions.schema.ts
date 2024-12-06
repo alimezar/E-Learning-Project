@@ -14,7 +14,7 @@ export class Questions {
   @Prop({ type: String, required: true })
   question: string;
 
-  @Prop({ type: [String], required: true, validate: (arr) => arr.length === 2  /* this is to assure that the options array has 2 values only*/ })
+  @Prop({ type: [String], required: true })
   options: string[];
 
   @Prop({ type: String, required: true })
