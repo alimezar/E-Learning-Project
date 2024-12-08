@@ -30,8 +30,8 @@ export class ResponseService {
   }
 
   // Create a new response
-  async createResponse(createResponseDto: Partial<Response>): Promise<Response> {
-    const { quizId, userId } = createResponseDto;
+  async createResponse(responseData: Partial<Response>): Promise<Response> {
+    const { quizId, userId } = responseData;
 
     if (!quizId || !userId) {
       throw new BadRequestException('Both quizId and userId are required');
@@ -43,7 +43,17 @@ export class ResponseService {
     await this.validateQuizId(quizObjectId);
     await this.validateUserId(userObjectId);
 
-    const newResponse = new this.responseModel({ ...createResponseDto, quizId: quizObjectId, userId: userObjectId });
+    const quiz = await this.quizModel.findById(quizId);
+
+    let score = 0;  
+
+    quiz.questions.forEach((question: any) => {
+      if (question.choice === question.answer) {
+        score++;
+      }
+    })
+
+    const newResponse = new this.responseModel({ ...responseData, quizId, userId, score });
     return newResponse.save();
   }
 

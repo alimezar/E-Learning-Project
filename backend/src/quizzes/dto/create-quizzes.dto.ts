@@ -1,4 +1,5 @@
 import { IsArray, IsMongoId, IsNotEmpty } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateQuizDto {
   @IsMongoId()
@@ -7,5 +8,5 @@ export class CreateQuizDto {
 
   @IsArray()
   @IsNotEmpty()
-  questions: Record<string, any>[];
+  questions: Types.ObjectId[];
 }
