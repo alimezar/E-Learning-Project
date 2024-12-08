@@ -5,12 +5,12 @@ import { AppService } from './app.service';
 import { CoursesModule } from './courses/courses.module';
 import { UsersModule } from './users/users.module';
 import { QuizModule } from './quizzes/quizzes.module';
-import { ProgressModule } from './progress/progress.module';
 import { ResponseModule } from './responses/responses.module';
 import { ModulesModule } from './modules/modules.module';
 import { NotesModule } from './notes/notes.module';
 import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './chat/chat.module';
+import { ProgressModule } from './progress/progress.module';
 
 
 

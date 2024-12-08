@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body } from '@nestjs/common';
 import { ProgressService } from './progress.service';
 import { Progress } from './progress.schema';
 
@@ -6,50 +6,34 @@ import { Progress } from './progress.schema';
 export class ProgressController {
   constructor(private readonly progressService: ProgressService) {}
 
-  @Post(':userId/:courseId')
-  async initializeProgress(
-    @Param('userId') userId: string,
-    @Param('courseId') courseId: string,
-  ) {
-    return this.progressService.createProgress(userId, courseId);
+  @Post()
+  async initializeProgress(@Body() body: { userId: string; courseId: string }) {
+    return this.progressService.createProgress(body.userId, body.courseId);
   }
 
-  @Get(':userId/:courseId')
-  async getProgress(
-    @Param('userId') userId: string,
-    @Param('courseId') courseId: string,
-  ) {
-    return this.progressService.getProgress(userId, courseId);
+  @Get()
+  async getProgress(@Body() body: { userId: string; courseId: string }) {
+    return this.progressService.getProgress(body.userId, body.courseId);
   }
 
-  @Put(':userId/:courseId')
+  @Put()
   async updateProgress(
-    @Param('userId') userId: string,
-    @Param('courseId') courseId: string,
-    @Body() updateData: Partial<Progress>,
+    @Body() body: { userId: string; courseId: string; updateData: Partial<Progress> },
   ) {
-    return this.progressService.updateProgress(userId, courseId, updateData);
+    return this.progressService.updateProgress(body.userId, body.courseId, body.updateData);
   }
 
-  @Put(':userId/:courseId/complete/:moduleId')
+  @Put('complete')
   async completeModule(
-    @Param('userId') userId: string,
-    @Param('courseId') courseId: string,
-    @Param('moduleId') moduleId: string,
+    @Body() body: { userId: string; courseId: string; moduleId: string },
   ) {
-    return this.progressService.completeModule(userId, courseId, moduleId);
+    return this.progressService.completeModule(body.userId, body.courseId, body.moduleId);
   }
+
   // =============================================== INSTRUCTOR PROGRESS ===============================================
-  @Get(':courseId/instructor')
-  async getInstructorProgress(
-    @Param('courseId') courseId: string,
-  ) {
-    return this.progressService.getInstructorProgressByCourse(courseId);
+  @Get('student')
+  async getStudentProgress(@Body() body: { courseId: string }) {
+    return this.progressService.getStudentProgressByCourse(body.courseId);
   }
-  @Get(':courseId/admin')
-  async getAdminProgress(
-    @Param('courseId') courseId: string,
-  ) {
-    return this.progressService.getAdminProgressByCourse(courseId);
-  }
+
 }
