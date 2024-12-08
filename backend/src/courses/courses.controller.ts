@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Put, Delete, Query,UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Put, Delete, Query,UnauthorizedException, HttpException, HttpStatus } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { Course } from './courses.schema';
 import { Users } from 'src/users/users.schema';
@@ -7,11 +7,16 @@ import { Users } from 'src/users/users.schema';
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
-  // Create a new course
-  @Post()
-  async createCourse(@Body() courseData: Partial<Course>): Promise<Course> {
-    return this.coursesService.createCourse(courseData);
+  
+// Create a new course
+@Post()
+async createCourse(@Body() courseData: Partial<Course>): Promise<Course> {
+  try {
+    return await this.coursesService.createCourse(courseData);
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
   }
+}
 
   // Get all courses
   @Get()

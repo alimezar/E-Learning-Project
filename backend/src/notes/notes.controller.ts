@@ -35,6 +35,11 @@ export class NoteController {
     return this.noteService.getNotesByUserAndModule(userId, moduleId);
   }
 
+  // Get All notes 
+  @Get()
+  async getAllNotes(): Promise<Notes[]>{
+    return this.noteService.getNotes();
+  }
   // Update a note by its ID
   @Put(':id')
   async updateNote(
