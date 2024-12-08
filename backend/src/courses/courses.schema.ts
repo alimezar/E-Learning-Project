@@ -21,13 +21,13 @@ export class Course {
   createdBy: Types.ObjectId;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Module' }] })
-  modules: Types.ObjectId[]; // Link modules hierarchically.
+  modules: Types.ObjectId[]; 
 
   @Prop({ type: [String], default: [] })
   multimediaResources: string[]; // Array of URLs for videos, PDFs, etc.
 
   @Prop({ type: [Object], default: [] })
-  versions: Record<string, any>[]; // Store versioned course content.
+  versions: Record<string, any>[]; 
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);

@@ -10,8 +10,8 @@ import { Module } from '../modules/modules.schema';
 export class NoteService {
   constructor(
     @InjectModel(Notes.name) private readonly noteModel: Model<NoteDocument>,
-    @InjectModel('Users') private readonly userModel: Model<Users>, // Inject Users model
-    @InjectModel('Course') private readonly courseModel: Model<Course>, // Inject Courses model
+    @InjectModel('Users') private readonly userModel: Model<Users>, 
+    @InjectModel('Course') private readonly courseModel: Model<Course>, 
     @InjectModel('Module') private readonly moduleModel: Model<Module>,
     
   ) {}
@@ -66,7 +66,7 @@ export class NoteService {
 
   // Get all Notes
   async getNotes(): Promise<Notes[]> {
-    return this.noteModel.find().populate('user_id').populate('course_id').exec();
+    return this.noteModel.find().exec();
   }
 
   // Get one Note by its ID

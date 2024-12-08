@@ -13,19 +13,51 @@ export class CoursesService {
   ) {}
 
   // Create a new course
-  async createCourse(courseData: any): Promise<Course> {
-    // Validate `createdBy` is a valid MongoDB ObjectId
+  // async createCourse(courseData: any): Promise<Course> {
+  //   // Validate `createdBy` is a valid MongoDB ObjectId
+  //   const instructor = await this.userModel.findOne({
+  //     _id: courseData.createdBy,
+  //     role: 'instructor',
+  //   });
+
+  //   if (!instructor) {
+  //     throw new BadRequestException('Invalid instructor ID or not an instructor');
+  //   }
+
+  //   // Proceed with course creation
+  //   return this.courseModel.create(courseData);
+  // }
+
+  async createCourse(courseData: Partial<Course>): Promise<Course> {
+    const { createdBy, title, description, category, difficultyLevel } = courseData;
+  
+    // Validate required fields
+    if (!createdBy || !title || !description || !category || !difficultyLevel) {
+      throw new BadRequestException('Missing required fields: createdBy, title, description, category, or difficultyLevel.');
+    }
+  
+    // Validate `createdBy` is a valid MongoDB ObjectId and belongs to an instructor
     const instructor = await this.userModel.findOne({
-      _id: courseData.createdBy,
+      _id: createdBy,
       role: 'instructor',
     });
-
+  
     if (!instructor) {
-      throw new BadRequestException('Invalid instructor ID or not an instructor');
+      throw new BadRequestException('Invalid instructor ID or user is not an instructor.');
     }
-
-    // Proceed with course creation
-    return this.courseModel.create(courseData);
+  
+    // Initialize optional fields if not provided
+    const courseToCreate = {
+      ...courseData,
+      createdBy: instructor.name,
+      modules: courseData.modules || [],
+      multimediaResources: courseData.multimediaResources || [],
+      versions: courseData.versions || [],
+    };
+  
+    // Create and save the course
+    const newCourse = new this.courseModel(courseToCreate);
+    return newCourse.save();
   }
 
   // Get all courses

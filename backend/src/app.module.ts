@@ -11,12 +11,13 @@ import { ResponseModule } from './responses/responses.module';
 import { ModulesModule } from './modules/modules.module';
 import { NotesModule } from './notes/notes.module';
 import { AuthModule } from './auth/auth.module';
-import { BackupModule } from './backup/backup.module';
+// import { BackupModule } from './backup/backup.module';
 import { ChatModule } from './chat/chat.module';
 
 
 @Module({                         //copy below in mongodb compass should connect you with database if not tell koshty :)
-  imports: [MongooseModule.forRoot('mongodb+srv://koshty:Pm07DIXleojhZaqD@e-learning.k67sj.mongodb.net/e-learning'), CoursesModule,UsersModule,QuizModule,QuestionsModule,ProgressModule,ResponseModule,ModulesModule,NotesModule,AuthModule,ChatModule],
+  imports: [MongooseModule.forRoot('mongodb+srv://koshty:Pm07DIXleojhZaqD@e-learning.k67sj.mongodb.net/e-learning'), CoursesModule,UsersModule,QuizModule,QuestionsModule,
+    ProgressModule,ResponseModule,ModulesModule,NotesModule,AuthModule,ChatModule],
   controllers: [AppController],
   providers: [AppService],
 })
