@@ -1,8 +1,18 @@
-import { Controller, Post, Get, Body, Param, Put, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Put,
+  Delete,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { NoteService } from './notes.service';
 import { Notes } from './notes.schema';
 
-@Controller('notes') // Base route
+@Controller('notes')
 export class NoteController {
   constructor(private readonly noteService: NoteService) {}
 
@@ -16,20 +26,13 @@ export class NoteController {
     }
   }
 
-  // Get all notes
-  @Get()
-  async getNotes(): Promise<Notes[]> {
-    return await this.noteService.getNotes();
-  }
-
-  // Get one note by its ID
-  @Get(':id')
-  async getNoteById(@Param('id') noteId: string): Promise<Notes> {
-    try {
-      return await this.noteService.getNoteById(noteId);
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
-    }
+  // Get notes by user and module
+  @Get('user/:userId/module/:moduleId')
+  async getNotesByUserAndModule(
+    @Param('userId') userId: string,
+    @Param('moduleId') moduleId: string,
+  ): Promise<Notes[]> {
+    return this.noteService.getNotesByUserAndModule(userId, moduleId);
   }
 
   // Update a note by its ID

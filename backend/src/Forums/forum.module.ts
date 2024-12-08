@@ -6,7 +6,7 @@ import { Thread, ThreadSchema } from './thread/thread.schema';
 import { ReplyController } from './reply/reply.controller';
 import { ReplyService } from './reply/reply.service';
 import { Reply, ReplySchema } from './reply/reply.schema';
-import { NotificationModule } from '../Notification/notifications.module'; // Import NotificationModule
+import { NotificationModule } from '../notifications/notifications.module'; // Import NotificationModule
 
 @Module({
   imports: [
