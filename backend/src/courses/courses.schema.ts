@@ -17,8 +17,8 @@ export class Course {
   @Prop({ required: true, enum: ['Beginner', 'Intermediate', 'Advanced'] })
   difficultyLevel: 'Beginner' | 'Intermediate' | 'Advanced';
 
-  @Prop({ required: true })
-  createdBy: string; // Instructor ID
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true }) 
+  createdBy: Types.ObjectId;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Module' }] })
   modules: Types.ObjectId[]; // Link modules hierarchically.

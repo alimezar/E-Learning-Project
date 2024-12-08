@@ -16,7 +16,7 @@ import { ChatModule } from './chat/chat.module';
 
 
 @Module({                         //copy below in mongodb compass should connect you with database if not tell koshty :)
-  imports: [MongooseModule.forRoot('mongodb+srv://koshty:Pm07DIXleojhZaqD@e-learning.k67sj.mongodb.net/e-learning'), CoursesModule,UsersModule,QuizModule,QuestionsModule,ProgressModule,ResponseModule,ModulesModule,NotesModule,AuthModule,ChatModule, BackupModule],
+  imports: [MongooseModule.forRoot('mongodb+srv://koshty:Pm07DIXleojhZaqD@e-learning.k67sj.mongodb.net/e-learning'), CoursesModule,UsersModule,QuizModule,QuestionsModule,ProgressModule,ResponseModule,ModulesModule,NotesModule,AuthModule,ChatModule],
   controllers: [AppController],
   providers: [AppService],
 })
