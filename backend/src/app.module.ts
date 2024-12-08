@@ -11,7 +11,7 @@ import { ResponseModule } from './responses/responses.module';
 import { ModulesModule } from './modules/modules.module';
 import { NotesModule } from './notes/notes.module';
 import { AuthModule } from './auth/auth.module';
-import { BackupModule } from './backup/backup.module';
+// import { BackupModule } from './backup/backup.module';
 import { ChatModule } from './chat/chat.module';
 
 
