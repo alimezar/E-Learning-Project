@@ -21,6 +21,10 @@ export class Progress {
 
   @Prop({ required: true, default: () => new Date() })
   last_accessed: Date;
+ 
+  @Prop({ required: true, default: 0 })
+  averageScore: number;
+//average score added
 }
 
 export const ProgressSchema = SchemaFactory.createForClass(Progress);
