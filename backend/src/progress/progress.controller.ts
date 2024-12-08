@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body } from '@nestjs/common';
 import { ProgressService } from './progress.service';
 import { Progress } from './progress.schema';
 
@@ -6,37 +6,38 @@ import { Progress } from './progress.schema';
 export class ProgressController {
   constructor(private readonly progressService: ProgressService) {}
 
-  @Post(':userId/:courseId')
-  async initializeProgress(
-    @Param('userId') userId: string,
-    @Param('courseId') courseId: string,
-  ) {
+  @Post()
+  async initializeProgress(@Body() data: { userId: string, courseId: string }) {
+    const { userId, courseId } = data;
     return this.progressService.createProgress(userId, courseId);
   }
 
-  @Get(':userId/:courseId')
-  async getProgress(
-    @Param('userId') userId: string,
-    @Param('courseId') courseId: string,
-  ) {
+  @Get()
+  async getProgress(@Body() data: { userId: string, courseId: string }) {
+    const { userId, courseId } = data;
     return this.progressService.getProgress(userId, courseId);
   }
 
-  @Put(':userId/:courseId')
+  @Put()
   async updateProgress(
-    @Param('userId') userId: string,
-    @Param('courseId') courseId: string,
-    @Body() updateData: Partial<Progress>,
+    @Body() data: { userId: string, courseId: string, updateData: Partial<Progress> }
   ) {
+    const { userId, courseId, updateData } = data;
     return this.progressService.updateProgress(userId, courseId, updateData);
   }
 
-  @Put(':userId/:courseId/complete/:moduleId')
+  @Put('complete')
   async completeModule(
-    @Param('userId') userId: string,
-    @Param('courseId') courseId: string,
-    @Param('moduleId') moduleId: string,
+    @Body() data: { userId: string, courseId: string, moduleId: string }
   ) {
+    const { userId, courseId, moduleId } = data;
     return this.progressService.completeModule(userId, courseId, moduleId);
+  }
+
+  // Get course metrics (completion rate, avg score, avg time spent)
+  @Get('course-metrics')
+  async getCourseMetrics(@Body() data: { courseId: string }) {
+    const { courseId } = data;
+    return this.progressService.getCourseMetrics(courseId);
   }
 }

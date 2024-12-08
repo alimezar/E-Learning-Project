@@ -121,4 +121,45 @@ export class ProgressService {
       .populate('courseId')
       .exec();
   }
+
+  // Method to calculate course metrics
+  async getCourseMetrics(courseId: string) {
+    const courseObjectId = new Types.ObjectId(courseId);
+
+    // Aggregating progress data for the course
+    const metrics = await this.progressModel.aggregate([
+      { $match: { courseId: courseObjectId } },
+      {
+        $group: {
+          _id: '$courseId',
+          totalUsers: { $sum: 1 },
+          avgScore: { $avg: '$score' },
+          avgTimeSpent: { $avg: '$timeSpent' },
+          completedUsers: {
+            $sum: { $cond: [{ $gte: ['$completedPercentage', 100] }, 1, 0] },
+          },
+          totalModules: { $max: { $size: '$completedCourses' } }, // assuming total modules is the size of completedCourses
+        },
+      },
+      {
+        $project: {
+          courseId: '$_id',
+          totalUsers: 1,
+          avgScore: 1,
+          avgTimeSpent: 1,
+          completedUsers: 1,
+          completionRate: {
+            $multiply: [{ $divide: ['$completedUsers', '$totalUsers'] }, 100],
+          },
+        },
+      },
+    ]);
+
+    if (!metrics || metrics.length === 0) {
+      throw new NotFoundException(`Metrics for course ${courseId} not found.`);
+    }
+
+    return metrics[0]; // Return the aggregated metrics
+  }
 }
+
