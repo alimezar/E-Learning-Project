@@ -11,9 +11,10 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: process.env.FRONTEND_URL, // Frontend URL
+    origin: `*`, // Frontend URL
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'], // Add headers if needed
   });
 
   app.useGlobalPipes(new ValidationPipe());
