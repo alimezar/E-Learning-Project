@@ -8,8 +8,9 @@ export class Quizzes {
   @Prop({ type: Types.ObjectId, ref: 'Module', required: true }) 
   moduleId: Types.ObjectId;
 
-  @Prop({ type: [Object], required: true })
-  questions: Record<string, any>[];
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Questions'}], required: true })
+  questions: Types.ObjectId[];
+  
 }
 
 export const QuizSchema = SchemaFactory.createForClass(Quizzes);
