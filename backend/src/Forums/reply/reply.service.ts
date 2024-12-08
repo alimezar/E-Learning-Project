@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Reply } from './reply.schema';
-import { NotificationService } from '../../Notification/notification.service'; 
+import { NotificationService } from '../../notifications/notifications.service'; 
 
 @Injectable()
 export class ReplyService {
