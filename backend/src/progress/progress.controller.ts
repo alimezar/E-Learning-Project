@@ -39,4 +39,17 @@ export class ProgressController {
   ) {
     return this.progressService.completeModule(userId, courseId, moduleId);
   }
+  // =============================================== INSTRUCTOR PROGRESS ===============================================
+  @Get(':courseId/instructor')
+  async getInstructorProgress(
+    @Param('courseId') courseId: string,
+  ) {
+    return this.progressService.getInstructorProgressByCourse(courseId);
+  }
+  @Get(':courseId/admin')
+  async getAdminProgress(
+    @Param('courseId') courseId: string,
+  ) {
+    return this.progressService.getAdminProgressByCourse(courseId);
+  }
 }
