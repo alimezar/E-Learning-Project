@@ -7,6 +7,9 @@ export class ChatMessage extends Document {
   senderId: string;
 
   @Prop({ required: true })
+  senderName: string; // Add senderName to the schema
+
+  @Prop({ required: true })
   receiverId: string;
 
   @Prop({ required: true })
