@@ -8,7 +8,6 @@ const NavBar = () => {
       <Link href="/auth/register">Register</Link>
       <Link href="/auth/login">Login</Link>
       <Link href="/Chat">chat</Link>
-      <Link href="/chat2">chat</Link>
 
     </nav>
   );

@@ -7,11 +7,11 @@ import { ChatMessage } from "../chat/chat-message.schema";
 export class ChatService {
   constructor(@InjectModel(ChatMessage.name) private chatMessageModel: Model<ChatMessage>) {}
 
-  async saveMessage(data: { senderId: string; receiverId: string; message: string }) {
+  async saveMessage(data: { senderId: string; senderName: string; receiverId: string; message: string }) {
     const newMessage = new this.chatMessageModel(data);
     return newMessage.save(); // Save to MongoDB
   }
-
+    
   async getMessages() {
     return this.chatMessageModel.find().sort({ timestamp: -1 }).exec(); // Fetch messages
   }

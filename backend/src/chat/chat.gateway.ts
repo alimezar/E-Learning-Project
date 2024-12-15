@@ -27,13 +27,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('sendMessage')
   async handleMessage(
-    @MessageBody() data: { senderId: string; receiverId: string; message: string },
+    @MessageBody() data: { senderId: string; senderName: string; receiverId: string; message: string },
   ) {
+    console.log('Received message data:', data); // Log the received data
+  
+    // Save message to database
     const savedMessage = await this.chatService.saveMessage(data);
-    this.server.emit('receiveMessage', savedMessage); // Broadcast the saved message
+  
+    console.log('Saved message:', savedMessage); // Log the saved message
+    
+    // Broadcast message with senderName
+    this.server.emit('receiveMessage', {
+      senderId: savedMessage.senderId,
+      senderName: savedMessage.senderName, // Include senderName
+      receiverId: savedMessage.receiverId,
+      message: savedMessage.message,
+      timestamp: savedMessage.timestamp,
+    });
   }
   
-  @SubscribeMessage('fetchMessages')
+@SubscribeMessage('fetchMessages')
   async handleFetchMessages(@MessageBody() userId: string) {
     const userMessages = await this.chatService.getUserMessages(userId);
     this.server.emit('userMessages', userMessages); // Send the messages to the client
