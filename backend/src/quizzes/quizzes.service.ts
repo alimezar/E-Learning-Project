@@ -4,6 +4,9 @@ import { Quizzes, QuizDocument } from './quizzes.schema';
 import { Module, ModuleDocument } from '../modules/modules.schema';
 import { Questions, QuestionDocument } from '../questions/questions.schema';
 import { Model, Types } from 'mongoose';
+import { Progress, ProgressDocument } from '../progress/progress.schema';
+import { UserDocument } from '../users/users.schema';
+
 
 @Injectable()
 export class QuizService {
@@ -11,6 +14,8 @@ export class QuizService {
     @InjectModel('Quizzes') private readonly quizModel: Model<QuizDocument>,
     @InjectModel('Module') private readonly moduleModel: Model<ModuleDocument>, // Inject Module model
     @InjectModel('Questions') private readonly questionModel: Model<QuestionDocument>, //inject Question model
+    @InjectModel('Progress') private readonly progressModel: Model<ProgressDocument>, //inject Progress model
+    @InjectModel('Users') private readonly userModel: Model<UserDocument> //Inject Users model
   ) {}
 
   // Validate moduleId
@@ -30,7 +35,30 @@ export class QuizService {
     await this.validateModuleId(checkModuleId); // Validate moduleId
 
     const moduleId = quizData.moduleId.toString();
-    const difficulty = "easy"; // difficulty for now (temporary)
+    const module = await this.moduleModel.findById(moduleId);
+    const courseId = module.course_id;
+
+    const userId = quizData.userId;
+    const user = this.userModel.findById(userId)
+
+    if(!(await user).canCreateQuiz){
+      throw new BadRequestException('The user does not have permission to create a quiz');
+    }
+
+    const progress = await this.progressModel.findOne({userId, courseId});
+    const averageScore = progress.averageScore;
+
+    let difficulty;
+
+    if(averageScore < 2){
+      difficulty = "easy";
+    }
+    else if(averageScore >= 2 && averageScore < 4){
+      difficulty = "medium";
+    }
+    else{
+      difficulty = "hard";
+    }
 
     const questions = await this.questionModel.aggregate([  
       { $match: { moduleId, difficulty } }, // get questions by moduleId and difficulty
@@ -41,7 +69,7 @@ export class QuizService {
       throw new BadRequestException('Not enough questions available to create a quiz.');
     }
 
-    const newQuiz = new this.quizModel({ ...quizData, moduleId, questions });
+    const newQuiz = new this.quizModel({ ...quizData, userId, moduleId, questions });
     return newQuiz.save();
   }
 
