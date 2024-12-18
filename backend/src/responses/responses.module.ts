@@ -10,7 +10,8 @@ import { ModulesModule } from '../modules/modules.module';
 
 @Module({
   imports: [
-  MongooseModule.forFeature([{ name: Response.name, schema: ResponseSchema }]), QuizModule, UsersModule, ProgressModule, ModulesModule],
+  MongooseModule.forFeature([{ name: Response.name, schema: ResponseSchema }]), QuizModule, UsersModule, 
+   ProgressModule, ModulesModule],
   providers: [ResponseService],
   controllers: [ResponseController],
 })
