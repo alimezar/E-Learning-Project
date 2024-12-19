@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import NavBar from '../components/NavBar';
 
 let socket: Socket;
 
@@ -70,6 +71,7 @@ const ChatPage = () => {
 
   return (
     <div>
+      <NavBar/>
       <h1>Chat</h1>
       <p>Logged in as: <strong>{userName}</strong></p>
       <div
