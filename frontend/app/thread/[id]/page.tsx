@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import NavBar from '@/app/components/NavBar';
 
 const ThreadPage = () => {
   const { id } = useParams(); // Extract 'id' from the URL
@@ -180,6 +181,7 @@ const ThreadPage = () => {
 
   return (
     <div style={styles.container}>
+      <NavBar/>
       <h1 style={styles.header}>Thread Details</h1>
 
       <div style={styles.threadCard}>

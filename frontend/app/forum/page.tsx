@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import NavBar from '../components/NavBar';
 
 interface Thread {
   _id: string;
@@ -149,6 +150,7 @@ const Forum = ({ courseId }: { courseId: string }) => {
   
   return (
     <div style={styles.container}>
+      <NavBar/>
       <h1 style={styles.header}>Forum</h1>
 
       {/* Loading and error feedback */}
