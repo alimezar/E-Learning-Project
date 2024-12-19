@@ -67,7 +67,7 @@ export class ResponseService {
     const courseId = module.course_id;
 
     // Get all responses for the user and course
-    const responses = await this.responseModel.find({ userId, quizId }).exec();
+    const responses = await this.responseModel.find({ userId, quizId });
 
     // Calculate total score from all responses
     const totalScore = responses.reduce((total, response) => total + response.score, 0);  // no need to add (+ score) since it's saved in the database after newResponse.save(), so now it's actually part of the response.score here

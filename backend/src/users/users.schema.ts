@@ -26,9 +26,6 @@ export class Users {
   
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Course' }] }) // Reference to Course schema
   coursesTaught: Types.ObjectId[]; 
-
-  @Prop({ required: true, default: false })
-  canCreateQuiz: boolean;
 }
 
 

@@ -39,13 +39,8 @@ export class QuizService {
     const courseId = module.course_id;
 
     const userId = quizData.userId;
-    const user = this.userModel.findById(userId)
 
-    if(!(await user).canCreateQuiz){
-      throw new BadRequestException('The user does not have permission to create a quiz');
-    }
-
-    const progress = await this.progressModel.findOne({userId, courseId});
+    const progress = await this.progressModel.findOne({userId: new Types.ObjectId(userId) , courseId: new Types.ObjectId(courseId)}).exec();
     const averageScore = progress.averageScore;
 
     let difficulty;
