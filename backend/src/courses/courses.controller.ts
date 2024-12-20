@@ -2,6 +2,8 @@ import { Controller, Post, Get, Body, Param, Put, Delete, Query,UnauthorizedExce
 import { CoursesService } from './courses.service';
 import { Course } from './courses.schema';
 import { Users } from 'src/users/users.schema';
+import { Module, ModuleDocument } from '../modules/modules.schema'; // Adjust the path to the correct location
+
 
 @Controller('courses')
 export class CoursesController {
@@ -23,6 +25,29 @@ async createCourse(@Body() courseData: Partial<Course>): Promise<Course> {
   async getAllCourses(): Promise<Course[]> {
     return this.coursesService.getAllCourses();
   }
+// Get Course Multi-Media resources
+@Get(':courseId/resources')
+async getMultiMediaResources(
+  @Param('courseId') courseId: string,
+): Promise<string[]> {
+  return this.coursesService.getMultiMediaResources(courseId);
+}
+
+@Get(':courseId/modules/details')
+async getCourseModulesWithDetails(
+  @Param('courseId') courseId: string,
+): Promise<{ courseId: string; modules: Module[] }> {
+  return await this.coursesService.getCourseModulesWithDetails(courseId);
+}
+
+
+// Get Course Modules 
+@Get(':courseId/modules')
+async getCourseModules(
+  @Param('courseId') courseId: string,
+): Promise<string[]> {
+  return this.coursesService.getCourseModules(courseId);
+}
 
   @Get('user/:userId')
 async getUserCourses(@Param('userId') userId: string): Promise<Course[]> {

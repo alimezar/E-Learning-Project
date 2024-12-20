@@ -1,35 +1,32 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { Course, CourseDocument } from './courses.schema';
 import { Users, UserDocument } from 'src/users/users.schema';
+import { Module, ModuleDocument } from '../modules/modules.schema'; // Import Module schema
+
 
 @Injectable()
 export class CoursesService {
   constructor(
     @InjectModel(Course.name) private readonly courseModel: Model<CourseDocument>,
     @InjectModel(Users.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(Module.name) private readonly moduleModel: Model<ModuleDocument>, // Inject Module model
 
   ) {}
 
-  // Create a new course
-  // async createCourse(courseData: any): Promise<Course> {
-  //   // Validate `createdBy` is a valid MongoDB ObjectId
-  //   const instructor = await this.userModel.findOne({
-  //     _id: courseData.createdBy,
-  //     role: 'instructor',
-  //   });
+  private async validateModuleIds(moduleIds: Types.ObjectId[]): Promise<void> {
+    for (const id of moduleIds) {
+      const moduleExists = await this.moduleModel.findById(id);
+      if (!moduleExists) {
+        throw new BadRequestException(`Invalid module ID: "${id}"`);
+      }
+    }
+  }
 
-  //   if (!instructor) {
-  //     throw new BadRequestException('Invalid instructor ID or not an instructor');
-  //   }
-
-  //   // Proceed with course creation
-  //   return this.courseModel.create(courseData);
-  // }
 
   async createCourse(courseData: Partial<Course>): Promise<Course> {
-    const { createdBy, title, description, category, difficultyLevel } = courseData;
+    const { createdBy, title, description, category, difficultyLevel, modules } = courseData;
   
     // Validate required fields
     if (!createdBy || !title || !description || !category || !difficultyLevel) {
@@ -41,6 +38,11 @@ export class CoursesService {
       _id: createdBy,
       role: 'instructor',
     });
+    
+    if (modules && modules.length > 0) {
+      await this.validateModuleIds(modules as Types.ObjectId[]);
+    }
+
   
     if (!instructor) {
       throw new BadRequestException('Invalid instructor ID or user is not an instructor.');
@@ -59,6 +61,25 @@ export class CoursesService {
     const newCourse = new this.courseModel(courseToCreate);
     return newCourse.save();
   }
+ 
+// Get Course MultiMedia Resources
+async getMultiMediaResources(courseId: string): Promise<string[]> {
+  const course = await this.courseModel.findById(courseId).exec();
+  if (!course) {
+    throw new NotFoundException('Course not found.');
+  }
+  return course.multimediaResources;
+}
+
+// Get Course Modules 
+async getCourseModules(courseId: string): Promise<any[]> {
+  const course = await this.courseModel.findById(courseId).exec();
+  if (!course) {
+    throw new NotFoundException('Course not found.');
+  }
+  return course.modules;
+}
+
 
   // Get all courses
   async getAllCourses(): Promise<Course[]> {
@@ -74,10 +95,44 @@ export class CoursesService {
     return this.courseModel.findById(id).exec();
   }
 
-  // Update a course by ID
   async updateCourse(id: string, updateData: Partial<Course>): Promise<Course> {
-    return this.courseModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+    if (updateData.modules && Array.isArray(updateData.modules)) {
+        // Convert modules to ObjectIds
+        const moduleIds = updateData.modules.map((moduleId) => 
+            new mongoose.Types.ObjectId(moduleId)
+        );
+
+        // Validate module IDs
+        await this.validateModuleIds(moduleIds);
+
+        // Update the modules field
+        updateData.modules = moduleIds as any;
+    }
+
+    const updatedCourse = await this.courseModel
+        .findByIdAndUpdate(id, updateData, { new: true })
+        .exec();
+
+    if (!updatedCourse) {
+        throw new NotFoundException(`Course with ID ${id} not found.`);
+    }
+
+    return updatedCourse;
+}
+async getCourseModulesWithDetails(courseId: string): Promise<{ courseId: string; modules: Module[] }> {
+  // Validate course existence
+  const course = await this.courseModel.findById(courseId).populate('modules').exec();
+  if (!course) {
+    throw new NotFoundException(`Course with ID ${courseId} not found.`);
   }
+
+  // Ensure all modules in the `modules` array are retrieved with their full details
+  const modules = await this.moduleModel.find({ _id: { $in: course.modules } }).exec();
+
+  return { courseId, modules };
+}
+
+
 
   // Delete a course by ID
   async deleteCourse(id: string): Promise<void> {
