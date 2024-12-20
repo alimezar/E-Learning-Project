@@ -4,6 +4,9 @@ import { Model, Types } from 'mongoose';
 import { Response, ResponseDocument } from './responses.schema';
 import { Quizzes } from '../quizzes/quizzes.schema';
 import { Users } from '../users/users.schema';
+import { Progress } from '../progress/progress.schema';
+import { Module } from '../modules/modules.schema'
+
 
 @Injectable()
 export class ResponseService {
@@ -11,6 +14,8 @@ export class ResponseService {
     @InjectModel(Response.name) private responseModel: Model<ResponseDocument>,
     @InjectModel('Quizzes') private quizModel: Model<Quizzes>, // Inject Quiz model
     @InjectModel('Users') private userModel: Model<Users>, // Inject User model
+    @InjectModel('Progress') private readonly progressModel: Model<Progress>, //Inject Progress model
+    @InjectModel('Module') private readonly moduleModel: Model<Module>, //Inject Module model
   ) {}
 
   // Validate quizId
@@ -54,7 +59,36 @@ export class ResponseService {
     })
 
     const newResponse = new this.responseModel({ ...responseData, quizId, userId, score });
-    return newResponse.save();
+    await newResponse.save();
+
+    const moduleId = quiz.moduleId;
+    const module = await this.moduleModel.findById(moduleId);
+
+    const courseId = module.course_id;
+
+    // Get all responses for the user and course
+    const responses = await this.responseModel.find({ userId, quizId });
+
+    // Calculate total score from all responses
+    let totalScore = 0  // no need to add (+ score) since it's saved in the database after newResponse.save(), so now it's actually part of the response.score here
+
+    responses.forEach(response => {
+      totalScore += response.score;
+    });
+
+    // Calculate the new average score
+    const updatedScore = totalScore / responses.length;
+
+    // Find the user's progress and update the average score
+    const progress = await this.progressModel.findOne({userId: new Types.ObjectId(userId) , courseId: new Types.ObjectId(courseId)}).exec();
+
+    if (progress) {
+      progress.averageScore = updatedScore;
+      await progress.save();
+    }
+
+    return newResponse;
+
   }
 
   // Get all responses
