@@ -7,15 +7,14 @@ import { Model, Types } from 'mongoose';
 import { Progress, ProgressDocument } from '../progress/progress.schema';
 import { UserDocument } from '../users/users.schema';
 
-
 @Injectable()
 export class QuizService {
   constructor(
     @InjectModel('Quizzes') private readonly quizModel: Model<QuizDocument>,
     @InjectModel('Module') private readonly moduleModel: Model<ModuleDocument>, // Inject Module model
-    @InjectModel('Questions') private readonly questionModel: Model<QuestionDocument>, //inject Question model
-    @InjectModel('Progress') private readonly progressModel: Model<ProgressDocument>, //inject Progress model
-    @InjectModel('Users') private readonly userModel: Model<UserDocument> //Inject Users model
+    @InjectModel('Questions') private readonly questionModel: Model<QuestionDocument>, // Inject Question model
+    @InjectModel('Progress') private readonly progressModel: Model<ProgressDocument>, // Inject Progress model
+    @InjectModel('Users') private readonly userModel: Model<UserDocument> // Inject Users model
   ) {}
 
   // Validate moduleId
@@ -31,43 +30,82 @@ export class QuizService {
     if (!quizData.moduleId) {
       throw new BadRequestException('moduleId is required');
     }
-    const checkModuleId = new Types.ObjectId(quizData.moduleId); // Convert to ObjectId
-    await this.validateModuleId(checkModuleId); // Validate moduleId
-
-    const moduleId = quizData.moduleId.toString();
-    const module = await this.moduleModel.findById(moduleId);
-    const courseId = module.course_id;
-
-    const userId = quizData.userId;
-
-    const progress = await this.progressModel.findOne({userId: new Types.ObjectId(userId) , courseId: new Types.ObjectId(courseId)}).exec();
+  
+    const moduleId = new Types.ObjectId(quizData.moduleId); // Convert to ObjectId
+  
+    if (!quizData.userId) {
+      throw new BadRequestException('userId is required');
+    }
+  
+    const userId = new Types.ObjectId(quizData.userId); // Convert userId to ObjectId
+  
+    // Retrieve the module directly and extract the courseId
+    const module = await this.moduleModel.findById(moduleId).exec();
+    if (!module) {
+      throw new BadRequestException(`Module with ID "${quizData.moduleId}" not found.`);
+    }
+  
+    console.log(`Fetched module: ${JSON.stringify(module)}`); // Log full module
+  
+    const courseId = module.course_id ? new Types.ObjectId(module.course_id) : null;
+    if (!courseId) {
+      throw new BadRequestException('The associated course ID is missing from the module.');
+    }
+  
+    console.log(`Looking for progress with userId: ${userId} and courseId: ${courseId}`); // Debug log
+  
+    // Fetch progress for the user in the course
+    const progress = await this.progressModel
+      .findOne({ userId, courseId })
+      .exec();
+  
+    if (!progress) {
+      throw new BadRequestException(
+        `Progress not found for userId "${quizData.userId}" and courseId "${courseId}".`
+      );
+    }
+  
+    if (progress.averageScore === undefined || progress.averageScore === null) {
+      throw new BadRequestException(
+        'Progress record exists but averageScore is missing or invalid.'
+      );
+    }
+  
     const averageScore = progress.averageScore;
-
-    let difficulty;
-
-    if(averageScore < 2){
-      difficulty = "easy";
+  
+    // Determine quiz difficulty based on averageScore
+    let difficulty: string;
+    if (averageScore < 2) {
+      difficulty = 'easy';
+    } else if (averageScore >= 2 && averageScore < 4) {
+      difficulty = 'medium';
+    } else {
+      difficulty = 'hard';
     }
-    else if(averageScore >= 2 && averageScore < 4){
-      difficulty = "medium";
-    }
-    else{
-      difficulty = "hard";
-    }
-
-    const questions = await this.questionModel.aggregate([  
-      { $match: { moduleId, difficulty } }, // get questions by moduleId and difficulty
-      { $sample: { size: 5 } } // Randomly pick 5 questions
+  
+    // Fetch 5 random questions matching the module and difficulty
+    const questions = await this.questionModel.aggregate([
+      { $match: { moduleId, difficulty } }, // Match by moduleId and difficulty
+      { $sample: { size: 5 } }, // Randomly select 5 questions
     ]);
-
-    if (questions.length < 5) { // to ensure that we have enough questions
-      throw new BadRequestException('Not enough questions available to create a quiz.');
+  
+    if (questions.length < 5) {
+      throw new BadRequestException('Not enough questions available for the quiz.');
     }
-
-    const newQuiz = new this.quizModel({ ...quizData, userId, moduleId, questions });
+  
+    console.log(`Fetched ${questions.length} questions for quiz creation.`);
+  
+    // Create and save the new quiz
+    const newQuiz = new this.quizModel({
+      ...quizData,
+      userId,
+      moduleId,
+      questions,
+    });
+  
     return newQuiz.save();
   }
-
+    
   // Get all quizzes
   async getQuizzes(): Promise<Quizzes[]> {
     return this.quizModel.find().populate('moduleId').exec(); // Populate moduleId with Module details
@@ -88,6 +126,7 @@ export class QuizService {
       const moduleId = new Types.ObjectId(updateData.moduleId); // Convert to ObjectId
       await this.validateModuleId(moduleId); // Validate moduleId
     }
+
     const updatedQuiz = await this.quizModel
       .findByIdAndUpdate(quizId, updateData, { new: true })
       .populate('moduleId')
