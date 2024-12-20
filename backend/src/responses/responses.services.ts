@@ -70,13 +70,17 @@ export class ResponseService {
     const responses = await this.responseModel.find({ userId, quizId });
 
     // Calculate total score from all responses
-    const totalScore = responses.reduce((total, response) => total + response.score, 0);  // no need to add (+ score) since it's saved in the database after newResponse.save(), so now it's actually part of the response.score here
+    let totalScore = 0  // no need to add (+ score) since it's saved in the database after newResponse.save(), so now it's actually part of the response.score here
+
+    responses.forEach(response => {
+      totalScore += response.score;
+    });
 
     // Calculate the new average score
     const updatedScore = totalScore / responses.length;
 
     // Find the user's progress and update the average score
-    const progress = await this.progressModel.findOne({ userId, courseId });
+    const progress = await this.progressModel.findOne({userId: new Types.ObjectId(userId) , courseId: new Types.ObjectId(courseId)}).exec();
 
     if (progress) {
       progress.averageScore = updatedScore;
