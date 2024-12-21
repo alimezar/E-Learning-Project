@@ -7,6 +7,7 @@ export default function CreateCourse() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [difficultyLevel, setDifficultyLevel] = useState('Beginner');
+  const [assignToSelf, setAssignToSelf] = useState(false); // State for checkbox
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -24,7 +25,7 @@ export default function CreateCourse() {
       }
 
       const userData = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
-      const instructorId = userData.id;
+      const instructorId = userData.id; // Ensure `id` matches your backend schema
 
       if (!instructorId) {
         alert('Instructor ID not found. Please log in again.');
@@ -42,7 +43,7 @@ export default function CreateCourse() {
           description,
           category,
           difficultyLevel,
-          createdById: instructorId,
+          createdById: assignToSelf ? instructorId : null, // Assign to instructor if checked
         }),
       });
 
@@ -54,9 +55,7 @@ export default function CreateCourse() {
         setDescription('');
         setCategory('');
         setDifficultyLevel('Beginner');
-
-        // Redirect to the instructor dashboard
-        window.location.href = '/profile/instructor';
+        setAssignToSelf(false); // Reset checkbox
       } else {
         setError(data.message || 'Failed to create course.');
       }
@@ -113,6 +112,15 @@ export default function CreateCourse() {
             <option value="Advanced">Advanced</option>
           </select>
         </label>
+        <label style={styles.checkboxLabel}>
+          <input
+            type="checkbox"
+            checked={assignToSelf}
+            onChange={(e) => setAssignToSelf(e.target.checked)}
+            style={styles.checkbox}
+          />
+          Would you like to teach this course?
+        </label>
         <button type="submit" style={styles.button}>
           Create Course
         </button>
@@ -128,8 +136,10 @@ const styles = {
   success: { color: 'green', marginBottom: '1rem' },
   form: { display: 'flex', flexDirection: 'column' as 'column', gap: '1rem' },
   label: { fontWeight: 'bold' },
+  checkboxLabel: { display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' },
   input: { padding: '0.5rem', fontSize: '1rem', borderRadius: 4, border: '1px solid #ccc', width: '100%' },
   textarea: { padding: '0.5rem', fontSize: '1rem', borderRadius: 4, border: '1px solid #ccc', minHeight: 100, width: '100%' },
   select: { padding: '0.5rem', fontSize: '1rem', borderRadius: 4, border: '1px solid #ccc', width: '100%' },
+  checkbox: { transform: 'scale(1.5)' },
   button: { padding: '0.5rem 1rem', fontSize: '1rem', borderRadius: 4, backgroundColor: '#4c9aff', color: '#fff', border: 'none', cursor: 'pointer' },
 };
