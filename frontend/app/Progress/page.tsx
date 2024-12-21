@@ -1,139 +1,237 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 
-// Define the Progress type matching the backend schema
-interface Progress {
-  userId: string; // ObjectId of the user
-  courseId: string; // ObjectId of the course
-  completedPercentage: number; // Completion percentage
-  completedCourses: string[]; // List of completed module IDs
-  last_accessed: string; // ISO string for last accessed timestamp
-  averageScore: number; // Average score for the course
-}
+// /*
+type Progress = {
+    userId: string;
+    courseId: string;
+    completedPercentage: number;
+    completedModules: string[];
+    lastAccessed: string;
+    averageScore: number;
+};
+//*/
 
-export default function ProgressPage() {
-  const [progressData, setProgressData] = useState<Progress | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+const ProgressPage = () => {
+    const [progressData, setProgressData] = useState<Progress[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
-  // Hardcoded user and course IDs for demonstration (replace with dynamic values)
-  const userId = '675f672582063256ad788226';
-  const courseId = '674069bf8f189db69c17419d';
+    // Fetch progress data from the backend
+    const fetchProgress = async () => {
+        try {
+            const response = await fetch('http://localhost:3001/progress');
+            if (!response.ok) throw new Error('Failed to fetch progress data');
+            const data = await response.json();
+            setProgressData(data);
+        } catch (err: any) {
+            setError(err.message || 'An error occurred while fetching progress data');
+        }
+    };
 
-  // Fetch progress data from the backend
-  const fetchProgressData = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(
-        `http://localhost:3000/progress?userId=${userId}&courseId=${courseId}`
-      );
-      if (!res.ok) {
-        throw new Error('Failed to fetch progress data');
-      }
-      const data: Progress = await res.json();
-      setProgressData(data);
-      setLoading(false);
-    } catch (err) {
-      console.error(err);
-      setError(true);
-      setLoading(false);
-    }
-  };
+    // Initialize progress
+    const initializeProgress = async (userId: string, courseId: string) => {
+        try {
+            const response = await fetch('http://localhost:3001/progress', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, courseId }),
+            });
+            if (!response.ok) throw new Error('Failed to initialize progress');
+            fetchProgress(); // Refresh data after initialization
+        } catch (err: any) {
+            setError(err.message || 'An error occurred while initializing progress');
+        }
+    };
 
-  // Mark a module as complete
-  const completeModule = async (moduleId: string) => {
-    try {
-      const res = await fetch('http://localhost:3001/progress/complete', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId, courseId, moduleId }),
-      });
-      if (!res.ok) {
-        throw new Error('Failed to complete module');
-      }
-      const updatedProgress: Progress = await res.json();
-      setProgressData(updatedProgress);
-    } catch (err) {
-      console.error(err);
-      setError(true);
-    }
-  };
+    // Complete a module
+    const completeModule = async (userId: string, courseId: string, moduleId: string) => {
+        try {
+            const response = await fetch('http://localhost:3001/progress/complete', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, courseId, moduleId }),
+            });
+            if (!response.ok) throw new Error('Failed to complete module');
+            fetchProgress(); // Refresh data after module completion
+        } catch (err: any) {
+            setError(err.message || 'An error occurred while completing the module');
+        }
+    };
 
-  useEffect(() => {
-    fetchProgressData();
-  }, []);
+    useEffect(() => {
+        fetchProgress();
+    }, []);
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-      <div className="max-w-4xl bg-white shadow-md rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-800 text-center mb-4">
-          Your Progress
-        </h1>
 
-        {/* Show loading message */}
-        {loading && <p className="text-gray-600 text-center">Loading...</p>}
 
-        {/* Show error message */}
-        {error && (
-          <p className="text-red-600 text-center">
-            Failed to load progress. Please try again later.
-          </p>
-        )}
+    return (
+        <div style={styles.containerStyle}>
+            <h1>Progress Management</h1>
 
-        {/* Display progress data */}
-        {progressData && !loading && !error && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">User ID:</span>
-              <span className="font-semibold text-gray-800">{progressData.userId}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Course ID:</span>
-              <span className="font-semibold text-gray-800">{progressData.courseId}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Completed Percentage:</span>
-              <span className="font-semibold text-gray-800">
-                {progressData.completedPercentage}%
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Completed Modules:</span>
-              <span className="font-semibold text-gray-800">
-                {progressData.completedCourses.join(', ')}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Last Accessed:</span>
-              <span className="font-semibold text-gray-800">
-                {new Date(progressData.last_accessed).toLocaleString()}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Average Score:</span>
-              <span className="font-semibold text-gray-800">{progressData.averageScore}</span>
+            {error && <p style={styles.errorStyle}>{error}</p>}
+
+            {/* Display all progress */}
+            <div>
+                <h2>All Progress</h2>
+                {progressData.length === 0 ? (
+                    <p>No progress data available</p>
+                ) : (
+                    <table style={styles.tableStyle}  >
+                        <thead>
+                            <tr>
+                                <th style={styles.thStyle}>User ID</th>
+                                <th style={styles.thStyle}>Course ID</th>
+                                <th style={styles.thStyle}>Completed Percentage</th>
+                                <th style={styles.thStyle}>Completed Modules</th>
+                                <th style={styles.thStyle}>Last Accessed</th>
+                                <th style={styles.thStyle}>Average Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {progressData.map((progress) => (
+                                <tr key={`${progress.userId}-${progress.courseId}`}>
+                                    <td style={styles.tdStyle}>{progress.userId}</td>
+                                    <td style={styles.tdStyle}>{progress.courseId}</td>
+                                    <td style={styles.tdStyle}>{progress.completedPercentage}%</td>
+
+                                    <td style={styles.tdStyle}>
+
+                                        {Array.isArray(progress.completedModules) && progress.completedModules.length > 0
+                                            ? progress.completedModules.join(', ')
+                                            : 'None'}
+
+                                    </td>
+
+                                    <td style={styles.tdStyle}>{new Date(progress.lastAccessed).toLocaleString()}</td>
+                                    <td style={styles.tdStyle}>{progress.averageScore}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
 
-            {/* Example: Button to complete a module */}
-            <button
-              onClick={() => completeModule('module123')}
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Complete Module "module123"
-            </button>
-          </div>
-        )}
+            {/* Initialize progress */}
+            <div style={{ marginTop: '20px' }}>
+                <h2>Initialize Progress</h2>
+                <form
+                    style={styles.formStyle}
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.target as HTMLFormElement);
+                        const userId = formData.get('userId') as string;
+                        const courseId = formData.get('courseId') as string;
+                        initializeProgress(userId, courseId);
+                    }}
+                >
+                    <label>
+                        User ID:
+                        <input type="text" name="userId" required style={styles.inputStyle} />
+                    </label>
+                    <label>
+                        Course ID:
+                        <input type="text" name="courseId" required style={styles.inputStyle} />
+                    </label>
+                    <button type="submit" style={styles.buttonStyle}>
+                        Initialize Progress
+                    </button>
+                </form>
+            </div>
 
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-blue-600 hover:underline">
-            Go Back to Home
-          </Link>
+            {/* Complete a module */}
+            <div style={{ marginTop: '20px' }}>
+                <h2>Complete Module</h2>
+                <form
+                    style={styles.formStyle}
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.target as HTMLFormElement);
+                        const userId = formData.get('userId') as string;
+                        const courseId = formData.get('courseId') as string;
+                        const moduleId = formData.get('moduleId') as string;
+                        completeModule(userId, courseId, moduleId);
+                    }}
+                >
+                    <label>
+                        User ID:
+                        <input type="text" name="userId" required style={styles.inputStyle} />
+                    </label>
+                    <label>
+                        Course ID:
+                        <input type="text" name="courseId" required style={styles.inputStyle} />
+                    </label>
+                    <label>
+                        Module ID:
+                        <input type="text" name="moduleId" required style={styles.inputStyle} />
+                    </label>
+                    <button type="submit" style={styles.buttonStyle}>
+                        Complete Module
+                    </button>
+                </form>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
+};
+
+const styles = {
+    // Styles
+    containerStyle: {
+        padding: '20px',
+        fontFamily: 'Arial, sans-serif',
+        maxWidth: '800px',
+        margin: 'auto',
+    },
+
+    tableStyle: {
+        width: '100%',
+        borderCollapse: 'collapse',
+        marginTop: '20px',
+    },
+
+    thStyle: {
+        backgroundColor: '#f4f4f4',
+        borderBottom: '1px solid #ddd',
+        textAlign: 'center',
+        padding: '10px',
+    },
+
+    tdStyle: {
+        borderBottom: '1px solid #ddd',
+        textAlign: 'center',
+        padding: '10px',
+    },
+
+    formStyle: {
+        marginBottom: '20px',
+        padding: '15px',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        backgroundColor: '#f9f9f9',
+    },
+
+    inputStyle: {
+        width: '100%',
+        padding: '8px',
+        marginBottom: '10px',
+        border: '1px solid #ddd',
+        borderRadius: '4px',
+    },
+
+    buttonStyle: {
+        backgroundColor: '#007bff',
+        color: '#fff',
+        padding: '10px 15px',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+    },
+
+    errorStyle: {
+        color: 'red',
+        marginTop: '10px',
+    }
 }
+
+
+export default ProgressPage;
