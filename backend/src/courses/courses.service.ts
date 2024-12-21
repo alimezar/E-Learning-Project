@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, Types } from 'mongoose';
 import { Course, CourseDocument } from './courses.schema';
@@ -26,32 +26,43 @@ export class CoursesService {
 
 
   async createCourse(courseData: Partial<Course>): Promise<Course> {
-    const { createdBy, title, description, category, difficultyLevel, modules } = courseData;
+    const { createdById, title, description, category, difficultyLevel, modules } = courseData;
   
-    // Validate required fields
-    if (!createdBy || !title || !description || !category || !difficultyLevel) {
-      throw new BadRequestException('Missing required fields: createdBy, title, description, category, or difficultyLevel.');
+    // Basic validation of mandatory fields
+    if (!title || !description || !category || !difficultyLevel) {
+      throw new BadRequestException(
+        'Missing required fields: title, description, category, or difficultyLevel.',
+      );
     }
   
-    // Validate `createdBy` is a valid MongoDB ObjectId and belongs to an instructor
-    const instructor = await this.userModel.findOne({
-      _id: createdBy,
-      role: 'instructor',
-    });
-    
+    // Validate instructor ID and ensure it's an ObjectId
+    let instructorName: string | undefined = undefined;
+    if (createdById) {
+      if (!mongoose.Types.ObjectId.isValid(createdById)) {
+        throw new BadRequestException('Invalid instructor ID format.');
+      }
+  
+      const instructor = await this.userModel.findOne({
+        _id: createdById,
+        role: 'instructor',
+      });
+      if (!instructor) {
+        throw new BadRequestException('Invalid instructor ID or user is not an instructor.');
+      }
+  
+      instructorName = instructor.name; // Retrieve instructor's name
+    }
+  
+    // Validate module IDs if provided
     if (modules && modules.length > 0) {
       await this.validateModuleIds(modules as Types.ObjectId[]);
     }
-
   
-    if (!instructor) {
-      throw new BadRequestException('Invalid instructor ID or user is not an instructor.');
-    }
-  
-    // Initialize optional fields if not provided
+    // Build the course data to be created
     const courseToCreate = {
       ...courseData,
-      createdBy: instructor.name,
+      createdBy: instructorName ?? courseData.createdBy ?? '', // Use instructor's name or fallback
+      createdById: createdById ? new mongoose.Types.ObjectId(createdById) : undefined, // Ensure ObjectId
       modules: courseData.modules || [],
       multimediaResources: courseData.multimediaResources || [],
       versions: courseData.versions || [],
@@ -59,8 +70,20 @@ export class CoursesService {
   
     // Create and save the course
     const newCourse = new this.courseModel(courseToCreate);
-    return newCourse.save();
+    const savedCourse = await newCourse.save();
+  
+    // Update the instructor's coursesTaught array
+    if (createdById) {
+      await this.userModel.findByIdAndUpdate(
+        createdById,
+        { $addToSet: { coursesTaught: savedCourse._id } }, // Add course ID to coursesTaught array
+        { new: true } // Return updated document (optional, for debugging)
+      );
+    }
+  
+    return savedCourse;
   }
+  
  
 // Get Course MultiMedia Resources
 async getMultiMediaResources(courseId: string): Promise<string[]> {
@@ -132,6 +155,16 @@ async getCourseModulesWithDetails(courseId: string): Promise<{ courseId: string;
   return { courseId, modules };
 }
 
+async markCourseUnavailable(courseId: string): Promise<void> {
+  const course = await this.courseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundException('Course not found.');
+  }
+
+  // Mark the course as unavailable
+  course.unavailable = true;
+  await course.save();
+}
 
 
   // Delete a course by ID
@@ -198,4 +231,117 @@ async searchInstructorInCourse(courseId: string, email: string): Promise<Users[]
 
   return instructors;
 }
+// Get courses taught by a specific instructor
+async getTaughtCourses(instructorId: string): Promise<Course[]> {
+  console.log('Service: Fetching taught courses for instructor', instructorId);
+
+  // Validate instructor ID
+  if (!mongoose.Types.ObjectId.isValid(instructorId)) {
+    console.error('Invalid instructor ID:', instructorId);
+    throw new BadRequestException('Invalid instructor ID format.');
+  }
+
+  // Fetch instructor document
+  const instructor = await this.userModel.findById(instructorId).exec();
+  if (!instructor) {
+    console.error('Instructor not found:', instructorId);
+    throw new NotFoundException('Instructor not found.');
+  }
+
+  // Fetch courses based on the `coursesTaught` array
+  const courses = await this.courseModel.find({ _id: { $in: instructor.coursesTaught } }).exec();
+  console.log('Courses fetched:', courses);
+
+  return courses;
+}
+
+
+
+
+
+// Get courses without an assigned instructor
+async getTeachableCourses(): Promise<Course[]> {
+  return this.courseModel.find({
+    $or: [
+      { createdById: { $exists: false } },
+      { createdById: null },
+    ],
+  }).exec();
+}
+
+// Assign a course to an instructor
+async assignCourse(courseId: string, instructorId: string): Promise<Course> {
+  console.log('Service: Assigning course to instructor', { courseId, instructorId });
+
+  // Validate `instructorId`
+  if (!mongoose.Types.ObjectId.isValid(instructorId)) {
+    console.error('Invalid instructor ID:', instructorId);
+    throw new BadRequestException('Invalid instructor ID format.');
+  }
+
+  // Fetch the instructor
+  const instructor = await this.userModel.findById(instructorId).exec();
+  if (!instructor) {
+    console.error('Instructor not found:', instructorId);
+    throw new NotFoundException('Instructor not found.');
+  }
+
+  if (instructor.role !== 'instructor') {
+    console.error('User is not an instructor:', instructorId);
+    throw new BadRequestException('User is not an instructor.');
+  }
+
+  // Fetch the course
+  const course = await this.courseModel.findById(courseId).exec();
+  if (!course) {
+    console.error('Course not found:', courseId);
+    throw new NotFoundException('Course not found.');
+  }
+
+  // Check if the course is already assigned
+  if (course.createdById) {
+    console.error('Course is already assigned:', courseId);
+    throw new BadRequestException('This course is already assigned to an instructor.');
+  }
+
+  // Assign the course to the instructor
+  course.createdBy = instructor.name;
+  course.createdById = instructor._id;
+
+  // Save the updated course
+  await course.save();
+
+  // Update the instructor's `coursesTaught` array
+  const updatedInstructor = await this.userModel
+    .findByIdAndUpdate(
+      instructorId,
+      { $addToSet: { coursesTaught: course._id } }, // Add the course ID to the array if not already present
+      { new: true } // Return the updated instructor document
+    )
+    .exec();
+
+  if (!updatedInstructor) {
+    console.error('Failed to update instructor coursesTaught:', instructorId);
+    throw new InternalServerErrorException('Failed to update instructor coursesTaught.');
+  }
+
+  console.log('Course successfully assigned:', {
+    courseId,
+    instructorId: instructor._id,
+    instructorName: instructor.name,
+  });
+
+  return course;
+}
+
+async getCourseVersions(courseId: string): Promise<Course> {
+  const course = await this.courseModel.findById(courseId);
+
+  if (!course) {
+    throw new NotFoundException('Course not found.');
+  }
+
+  return course;
+}
+
 }
