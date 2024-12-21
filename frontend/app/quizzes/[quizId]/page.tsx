@@ -4,9 +4,21 @@ import { CSSProperties, useState, useEffect } from "react";
 
 const styles: { [key: string]: CSSProperties } = {
   container: {
-    padding: "rem",
+    padding: "2rem",
     fontFamily: "Arial, sans-serif",
     position: "relative",
+    background: "linear-gradient(135deg, rgba(44, 41, 93, 0.8), rgba(30, 77, 77, 0.8)), url('/path-to-your-image.jpg')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundAttachment: "fixed", // Parallax effect
+    animation: "gradientAnimation 10s ease infinite",
+    color: "#ffffff",
+    minHeight: "100vh",
+  },
+  "@keyframes gradientAnimation": {
+    "0%": { backgroundPosition: "0% 50%" },
+    "50%": { backgroundPosition: "100% 50%" },
+    "100%": { backgroundPosition: "0% 50%" },
   },
   header: {
     fontSize: "2rem",
@@ -14,13 +26,14 @@ const styles: { [key: string]: CSSProperties } = {
     marginBottom: "1rem",
     textAlign: "center",
     fontFamily: "Trebuchet MS, Arial, sans-serif",
+    color: "#ffc857", // Golden accent for headers
   },
   questionContainer: {
     marginBottom: "2rem",
     padding: "1rem",
-    border: "1px solid #ddd",
+    border: "1px solid #4c4a7f",
     borderRadius: "8px",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#3e3966", // Slightly lighter background
     maxWidth: "600px",
     margin: "0 auto",
   },
@@ -29,18 +42,58 @@ const styles: { [key: string]: CSSProperties } = {
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: "1rem",
+    color: "#ffc857", // Golden yellow for questions
   },
   counter: {
     position: "fixed",
     top: "2rem",
     right: "2rem",
     padding: "1rem",
-    backgroundColor: "#f4f4f4",
-    border: "1px solid #ddd",
+    backgroundColor: "#1e4d4d", // Teal background for counter
+    border: "1px solid #4c4a7f", // Muted blue border
     borderRadius: "8px",
     fontSize: "1.2rem",
     fontWeight: "bold",
     fontFamily: "Trebuchet MS, Arial, sans-serif",
+    color: "#ffc857", // Golden yellow for contrast
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.2)", // Subtle shadow for depth
+  },
+  optionLabel: {
+    display: "block",
+    padding: "0.5rem",
+    margin: "0.5rem 0",
+    borderRadius: "4px",
+    backgroundColor: "#514d83", // Muted violet for option background
+    color: "#ffffff", // White text for readability
+    cursor: "pointer",
+    transition: "background-color 0.3s ease",
+  },
+  optionLabelHover: {
+    backgroundColor: "#1e4d4d", // Teal for hover effect
+  },
+  optionLabelSelected: {
+    backgroundColor: "#ffc857", // Highlighted option with golden tone
+    color: "#2c295d", // Darker contrast text
+  },
+  submitButton: {
+    display: "block",
+    marginTop: "2rem",
+    padding: "1rem 2rem",
+    backgroundColor: "#ffc857", // Golden background for the button
+    border: "none",
+    borderRadius: "8px",
+    color: "#2c295d", // Dark text for the button
+    fontSize: "1.2rem",
+    fontWeight: "bold",
+    cursor: "pointer",
+    transition: "background-color 0.3s ease",
+    width: "100%",
+    maxWidth: "300px",
+    marginLeft: "auto",
+    marginRight: "auto",
+  },
+  submitButtonHover: {
+    backgroundColor: "#1e4d4d", // Teal background for hover effect
   },
 };
 
@@ -54,7 +107,7 @@ type Question = {
 export default function QuizPage({ params }: { params: Promise<{ quizId: string }> }) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [quizId, setQuizId] = useState<string | null>(null);
-  const [moduleTitle, setModuleTitle] = useState<string | null>(null); // Store module title
+  const [moduleTitle, setModuleTitle] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -75,12 +128,7 @@ export default function QuizPage({ params }: { params: Promise<{ quizId: string 
         const res = await fetch(`http://localhost:3001/quizzes/${quizId}`);
         if (!res.ok) throw new Error("Failed to fetch quiz data");
         const quizData = await res.json();
-        console.log("Quiz Data:", quizData); // Debugging log
-
-        // Set module title from response
         setModuleTitle(quizData.moduleId.title);
-
-        // Set questions from response
         setQuestions(quizData.questions);
       } catch (err) {
         setError("Could not load the quiz. Please try again later.");
@@ -99,7 +147,55 @@ export default function QuizPage({ params }: { params: Promise<{ quizId: string 
     );
   };
 
-  const answeredCount = questions.filter((q) => q.choice).length;
+  const handleSubmit = async () => {
+    if (!quizId) {
+      setError("Quiz ID is missing. Cannot submit the quiz.");
+      return;
+    }
+  
+    try {
+      // Fetch the quiz to retrieve userId
+      const quizResponse = await fetch(`http://localhost:3001/quizzes/${quizId}`);
+      if (!quizResponse.ok) {
+        throw new Error("Failed to fetch quiz details.");
+      }
+  
+      const quizData = await quizResponse.json();
+      const userId = quizData.userId;
+  
+      // Validate userId
+      if (!userId) {
+        setError("User ID is missing from the quiz details.");
+        return;
+      }
+  
+      // API call to create a response
+      const response = await fetch(`http://localhost:3001/responses`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ quizId, userId }), // Use the retrieved userId
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to submit the quiz. Please try again.");
+      }
+  
+      const responseData = await response.json();
+  
+      // Redirect to the response page
+      const responseId = responseData._id;
+      window.location.href = `/responses/${responseId}?userId=${userId}&quizId=${quizId}`;
+    } catch (err) {
+      console.error("Error submitting the quiz:", err);
+      setError("An error occurred while submitting the quiz. Please try again.");
+    }
+  };
+  
+  
+
+  const answeredCount = questions.filter((q) => q.choice && q.options.includes(q.choice)).length;
 
   if (error) {
     return <div style={styles.container}>{error}</div>;
@@ -114,24 +210,37 @@ export default function QuizPage({ params }: { params: Promise<{ quizId: string 
         <div key={q._id} style={styles.questionContainer}>
           <h2 style={styles.question}>{q.question}</h2>
           {q.options.map((option) => (
-            <div key={option}>
-              <label>
-                <input
-                  type="radio"
-                  name={q._id}
-                  value={option}
-                  checked={q.choice === option}
-                  onChange={() => handleOptionSelect(q._id, option)}
-                />
-                {option}
-              </label>
-            </div>
+            <label
+              key={option}
+              style={{
+                ...styles.optionLabel,
+                ...(q.choice === option ? styles.optionLabelSelected : {}),
+              }}
+            >
+              <input
+                type="radio"
+                name={q._id}
+                value={option}
+                checked={q.choice === option}
+                onChange={() => handleOptionSelect(q._id, option)}
+                style={{ display: "none" }} // Hide default radio button
+              />
+              {option}
+            </label>
           ))}
         </div>
       ))}
       <div style={styles.counter}>
         Questions Answered: {answeredCount} / {questions.length}
       </div>
+      <button
+        style={styles.submitButton}
+        onClick={handleSubmit}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#1e4d4d"}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#ffc857"}
+      >
+        Submit Quiz
+      </button>
     </div>
   );
 }
