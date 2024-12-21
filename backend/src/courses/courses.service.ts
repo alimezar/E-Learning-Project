@@ -334,4 +334,14 @@ async assignCourse(courseId: string, instructorId: string): Promise<Course> {
   return course;
 }
 
+async getCourseVersions(courseId: string): Promise<Course> {
+  const course = await this.courseModel.findById(courseId);
+
+  if (!course) {
+    throw new NotFoundException('Course not found.');
+  }
+
+  return course;
+}
+
 }
