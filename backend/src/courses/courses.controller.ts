@@ -1,8 +1,9 @@
-import { Controller, Post, Get, Body, Param, Put, Delete, Query,UnauthorizedException, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Put, Delete, Query,UnauthorizedException, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { Course } from './courses.schema';
 import { Users } from 'src/users/users.schema';
 import { Module, ModuleDocument } from '../modules/modules.schema'; // Adjust the path to the correct location
+import mongoose from 'mongoose';
 
 
 @Controller('courses')
@@ -18,6 +19,26 @@ async createCourse(@Body() courseData: Partial<Course>): Promise<Course> {
   } catch (error) {
     throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
   }
+}
+
+@Get('taught')
+  async getTaughtCourses(@Query('instructorId') instructorId: string): Promise<Course[]> {
+    console.log('Fetching taught courses for instructor:', instructorId);
+
+    if (!instructorId) {
+      throw new BadRequestException('Instructor ID is required.');
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(instructorId)) {
+      throw new BadRequestException('Invalid Instructor ID format.');
+    }
+
+    return this.coursesService.getTaughtCourses(instructorId);
+  }
+
+@Get('teachable')
+async getTeachableCourses(): Promise<Course[]> {
+  return this.coursesService.getTeachableCourses();
 }
 
   // Get all courses
@@ -105,5 +126,27 @@ async searchInstructorInCourse(
 ) {
   return this.coursesService.searchInstructorInCourse(courseId, name);
 }
+
+
+
+@Post('assign/:courseId')
+async assignCourse(
+  @Param('courseId') courseId: string,
+  @Body('instructorId') instructorId: string,
+): Promise<Course> {
+  // Log the incoming parameters for debugging
+  console.log('Assigning course:', { courseId, instructorId });
+
+  if (!instructorId) {
+    throw new BadRequestException('Instructor ID is required.');
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(instructorId)) {
+    throw new BadRequestException('Invalid Instructor ID format.');
+  }
+
+  return this.coursesService.assignCourse(courseId, instructorId);
+}
+
 
 }
