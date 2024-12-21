@@ -3,12 +3,11 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
-export default function student() {
+export default function StudentDashboard() {
   const [username, setUsername] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
   const [courses, setCourses] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
 
   useEffect(() => {
     // Extract the 'user' cookie
@@ -17,10 +16,8 @@ export default function student() {
 
     if (userCookie) {
       try {
-        // Parse the user cookie
         const userData = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
         setUsername(userData.name);
-        setRole(userData.role); // Extract the user's role
       } catch (error) {
         console.error('Failed to parse user cookie:', error);
         setUsername('Guest'); // Fallback to guest
@@ -34,7 +31,7 @@ export default function student() {
     // Fetch courses from the backend
     const fetchCourses = async () => {
       try {
-        const response = await fetch('http://localhost:3001/courses'); 
+        const response = await fetch('http://localhost:3001/courses', { credentials: 'include' });
         const data = await response.json();
 
         if (response.ok) {
@@ -52,62 +49,11 @@ export default function student() {
     fetchCourses();
   }, []);
 
-  // Render content based on role
-  const renderContentByRole = () => {
-    if (role === 'instructor') {
-      return (
-        <div>
-          <h2 style={styles.sectionTitle}>Courses You Teach</h2>
-          {/* Replace this with logic to fetch and display courses taught */}
-          <p>Manage your courses and track student progress here.</p>
-          <Link href="/create-course" style={{ color: 'blue', textDecoration: 'underline' }}>
-            Create a New Course
-          </Link>
-        </div>
-      );
-    } else if (role === 'admin') {
-      return (
-        <div>
-          <h2 style={styles.sectionTitle}>Admin Dashboard</h2>
-          <p>Manage platform-wide settings and monitor user activity.</p>
-        </div>
-      );
-    } else {
-      // Default content for students
-      return (
-        <div>
-          <h2 style={styles.sectionTitle}>
-            Explore Courses <Link href="/courses" style={{ color: 'blue', textDecoration: 'underline' }}>Here!</Link>
-          </h2>
-          {error && <p style={styles.error}>{error}</p>}
-          <div style={styles.courseGrid}>
-            {courses.length > 0 ? (
-              courses.map((course) => (
-                <div key={course._id} style={styles.courseCard}>
-                  <h3 style={styles.courseTitle}>{course.title}</h3>
-                  <p style={styles.courseDescription}>{course.description}</p>
-                  <p style={styles.courseInstructor}>Instructor: {course.createdBy}</p>
-                  <a href={`/courses/${course._id}`} style={styles.courseLink}>
-                    View Course
-                  </a>
-                </div>
-              ))
-            ) : (
-              <p>No courses available.</p>
-            )}
-          </div>
-        </div>
-      );
-    }
-  };
-
   return (
     <div style={styles.container}>
       {/* Top Section: Welcome Message and Navbar */}
       <div style={styles.header}>
-        <div style={styles.welcome}>
-          {username ? `Welcome, ${username}` : 'Loading...'}
-        </div>
+        <div style={styles.welcome}>{username ? `Welcome, ${username}` : 'Loading...'}</div>
 
         {/* Dropdown Nav Bar */}
         <div
@@ -135,8 +81,29 @@ export default function student() {
         </div>
       </div>
 
-      {/* Main Content: Role-specific Content */}
-      <div style={styles.mainContent}>{renderContentByRole()}</div>
+      {/* Main Content: Student-specific Content */}
+      <div style={styles.mainContent}>
+        <h2 style={styles.sectionTitle}>
+          Explore Courses <Link href="/courses" style={{ color: 'blue', textDecoration: 'underline' }}>Here!</Link>
+        </h2>
+        {error && <p style={styles.error}>{error}</p>}
+        <div style={styles.courseGrid}>
+          {courses.length > 0 ? (
+            courses.map((course) => (
+              <div key={course._id} style={styles.courseCard}>
+                <h3 style={styles.courseTitle}>{course.title}</h3>
+                <p style={styles.courseDescription}>{course.description}</p>
+                <p style={styles.courseInstructor}>Instructor: {course.createdBy}</p>
+                <a href={`/courses/${course._id}`} style={styles.courseLink}>
+                  View Course
+                </a>
+              </div>
+            ))
+          ) : (
+            <p>No courses available.</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

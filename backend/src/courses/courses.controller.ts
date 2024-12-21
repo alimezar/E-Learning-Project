@@ -41,6 +41,7 @@ async getCourseModulesWithDetails(
 }
 
 
+
 // Get Course Modules 
 @Get(':courseId/modules')
 async getCourseModules(
