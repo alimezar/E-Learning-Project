@@ -1,70 +1,75 @@
-import { GetServerSideProps } from 'next';
-import { useState } from 'react';
+"use client";
+
+import { useState, useEffect } from "react";
 
 type Question = {
   _id: string;
   question: string;
   options: string[];
-  choice?: string; // Optional, since user selects it
+  choice?: string; // The user's selected answer
 };
 
-type QuizProps = {
-  moduleTitle: string;
-  questions: Question[];
-};
+export default function QuizPage({ params }: { params: Promise<{ quizId: string }> }) {
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [quizId, setQuizId] = useState<string | null>(null);
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { quizId } = context.params!;
-  const res = await fetch(`http://localhost:3001/quizzes/${quizId}`);
-  const quizData = await res.json();
+  useEffect(() => {
+    // Unwrap the `params` Promise to get the quizId
+    async function fetchParams() {
+      const resolvedParams = await params;
+      setQuizId(resolvedParams.quizId);
+    }
 
-  return {
-    props: {
-      moduleTitle: quizData.moduleId.title,
-      questions: quizData.questions,
-    },
-  };
-};
+    fetchParams();
+  }, [params]);
 
-const QuizPage = ({ moduleTitle, questions }: QuizProps) => {
-  const [userChoices, setUserChoices] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (!quizId) return;
 
-  const handleOptionSelect = (questionId: string, option: string) => {
-    setUserChoices((prev) => ({
-      ...prev,
-      [questionId]: option,
-    }));
+    // Fetch quiz data
+    async function fetchQuiz() {
+      try {
+        const res = await fetch(`http://localhost:3001/quizzes/${quizId}`);
+        const quizData = await res.json();
+        setQuestions(quizData.questions);
+      } catch (error) {
+        console.error("Failed to fetch quiz:", error);
+      }
+    }
+
+    fetchQuiz();
+  }, [quizId]);
+
+  const handleOptionSelect = (questionId: string, selectedOption: string) => {
+    setQuestions((prevQuestions) =>
+      prevQuestions.map((q) =>
+        q._id === questionId ? { ...q, choice: selectedOption } : q
+      )
+    );
   };
 
   return (
     <div>
-      <h1>{moduleTitle}</h1>
-      {questions.map((q, index) => (
-        <div key={q._id} style={{ marginBottom: '20px' }}>
-          <h2>
-            {index + 1}. {q.question}
-          </h2>
-          <div>
-            {q.options.map((option) => (
-              <button
-                key={option}
-                onClick={() => handleOptionSelect(q._id, option)}
-                style={{
-                  padding: '10px',
-                  margin: '5px',
-                  backgroundColor: userChoices[q._id] === option ? 'lightblue' : 'white',
-                  border: '1px solid black',
-                  cursor: 'pointer',
-                }}
-              >
+      <h1>Quiz</h1>
+      {questions.map((q) => (
+        <div key={q._id} style={{ marginBottom: "20px" }}>
+          <h2>{q.question}</h2>
+          {q.options.map((option) => (
+            <div key={option}>
+              <label>
+                <input
+                  type="radio"
+                  name={q._id}
+                  value={option}
+                  checked={q.choice === option}
+                  onChange={() => handleOptionSelect(q._id, option)}
+                />
                 {option}
-              </button>
-            ))}
-          </div>
+              </label>
+            </div>
+          ))}
         </div>
       ))}
     </div>
   );
-};
-
-export default QuizPage;
+}
