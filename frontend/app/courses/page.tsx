@@ -17,6 +17,7 @@ export default function CoursesPage() {
         console.log('Fetching courses...');
         const response = await fetch('http://localhost:3001/courses');
         const data = await response.json();
+        //alert("have "+data.length+" courses"); 
 
         if (response.ok) {
           console.log('Courses fetched successfully:', data);

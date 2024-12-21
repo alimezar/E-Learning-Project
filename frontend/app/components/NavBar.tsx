@@ -74,6 +74,9 @@ const NavBar = () => {
       <Link href="/forum" style={styles.link}>
         Forum
       </Link>
+      <Link href="/Progress" style={styles.link}>
+        Progress
+      </Link>
 
       <div style={styles.notificationWrapper}>
         <button onClick={toggleDropdown} style={styles.notificationButton}>
