@@ -48,7 +48,6 @@ export default function InstructorDashboard() {
 
     async function fetchTaughtCourses() {
       try {
-        // Extract the 'user' cookie
         const cookies = document.cookie.split('; ');
         const userCookie = cookies.find((cookie) => cookie.startsWith('user='));
 
@@ -57,7 +56,6 @@ export default function InstructorDashboard() {
           return;
         }
 
-        // Parse the cookie and extract the userId
         const userData = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
         const instructorId = userData.id;
 
@@ -154,9 +152,14 @@ export default function InstructorDashboard() {
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.title}>Instructor Dashboard</h1>
-        <Link href="/profile/instructor/courses/create" style={styles.createCourseLink}>
-          Create New Course
-        </Link>
+        <div style={styles.buttonGroup}>
+          <Link href="/profile/instructor/courses/create" style={styles.button}>
+            Create New Course
+          </Link>
+          <Link href="/profile/instructor/courses/view" style={styles.button}>
+            View All Courses
+          </Link>
+        </div>
       </div>
 
       {error && <p style={styles.error}>{error}</p>}
@@ -210,7 +213,8 @@ const styles = {
   container: { padding: '2rem', fontFamily: 'Arial, sans-serif' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' },
   title: { fontSize: '2rem', fontWeight: 'bold' },
-  createCourseLink: { padding: '0.5rem 1rem', backgroundColor: '#4c9aff', color: '#fff', textDecoration: 'none', borderRadius: '4px' },
+  buttonGroup: { display: 'flex', gap: '1rem' },
+  button: { padding: '0.5rem 1rem', backgroundColor: '#4c9aff', color: '#fff', textDecoration: 'none', borderRadius: '4px', cursor: 'pointer' },
   error: { color: 'red', marginBottom: '1rem' },
   section: { marginBottom: '2rem' },
   sectionTitle: { fontSize: '1.5rem', marginBottom: '1rem' },

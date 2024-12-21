@@ -22,7 +22,7 @@ export class Course {
 
   @Prop({ type: Types.ObjectId, ref: 'Users', required: false })
   createdById?: Types.ObjectId;
-  
+
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Module' }] })
   modules: Types.ObjectId[]; 
 
@@ -31,6 +31,9 @@ export class Course {
 
   @Prop({ type: [Object], default: [] })
   versions: Record<string, any>[]; 
+
+  @Prop({ type: Boolean, default: false })
+  unavailable: boolean;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);

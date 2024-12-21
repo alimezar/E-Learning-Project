@@ -21,6 +21,15 @@ async createCourse(@Body() courseData: Partial<Course>): Promise<Course> {
   }
 }
 
+@Put(':courseId/unavailable')
+async markCourseUnavailable(@Param('courseId') courseId: string): Promise<void> {
+  try {
+    await this.coursesService.markCourseUnavailable(courseId);
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  }
+}
+
 @Get('taught')
   async getTaughtCourses(@Query('instructorId') instructorId: string): Promise<Course[]> {
     console.log('Fetching taught courses for instructor:', instructorId);
@@ -83,13 +92,13 @@ async getUserCourses(@Param('userId') userId: string): Promise<Course[]> {
   }
 
   // Update a course by ID
-  @Put(':id')
-  async updateCourse(
-    @Param('id') id: string,
-    @Body() updateData: Partial<Course>,
-  ): Promise<Course> {
-    return this.coursesService.updateCourse(id, updateData);
-  }
+  @Put(':courseId')
+async updateCourse(
+  @Param('courseId') courseId: string,
+  @Body() updateData: Partial<Course>,
+): Promise<Course> {
+  return this.coursesService.updateCourse(courseId, updateData);
+}
 
   // Delete a course by ID
   @Delete(':id')

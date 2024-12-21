@@ -155,6 +155,16 @@ async getCourseModulesWithDetails(courseId: string): Promise<{ courseId: string;
   return { courseId, modules };
 }
 
+async markCourseUnavailable(courseId: string): Promise<void> {
+  const course = await this.courseModel.findById(courseId);
+  if (!course) {
+    throw new NotFoundException('Course not found.');
+  }
+
+  // Mark the course as unavailable
+  course.unavailable = true;
+  await course.save();
+}
 
 
   // Delete a course by ID
