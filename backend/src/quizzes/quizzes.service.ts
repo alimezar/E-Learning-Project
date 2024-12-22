@@ -85,7 +85,7 @@ export class QuizService {
   
     // Fetch 5 random questions matching the module and difficulty
     const questions = await this.questionModel.aggregate([
-      { $match: { moduleId, difficulty } }, // Match by moduleId and difficulty
+      { $match: { moduleId: quizData.moduleId.toString(), difficulty  } }, // Match by moduleId and difficulty
       { $sample: { size: 5 } }, // Randomly select 5 questions
     ]);
   
