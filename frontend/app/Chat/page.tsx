@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import NavBar from '../components/NavBar';
 
 let socket: Socket;
 
@@ -16,9 +15,13 @@ const parseCookies = () => {
   return cookies;
 };
 
-const ChatPage = () => {
+interface ChatPageProps {
+  courseId?: string; // Optional courseId for 1-on-1 chats
+}
+
+const ChatPage: React.FC<ChatPageProps> = ({ courseId }) => {
   const [messages, setMessages] = useState<
-    { senderId: string; senderName?: string; receiverId: string; message: string; _id?: string; timestamp?: string }[]
+    { senderId: string; senderName?: string; courseId?: string; message: string; _id?: string; timestamp?: string }[]
   >([]);
   const [newMessage, setNewMessage] = useState<string>('');
   const [userName, setUserName] = useState<string>(''); // Store the user's name
@@ -41,16 +44,29 @@ const ChatPage = () => {
     console.log('Socket initialized:', socket);
 
     // Listen for incoming messages
-    socket.on('receiveMessage', (message) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
-    });
+    if (courseId) {
+      // Group chat: Listen to course-specific channel
+      socket.on(`receiveMessage:${courseId}`, (message) => {
+        setMessages((prevMessages) => [...prevMessages, message]);
+      });
+    } else {
+      // 1-on-1 chat: Listen to user-specific channel
+      socket.on(`receiveMessage:${userId}`, (message) => {
+        setMessages((prevMessages) => [...prevMessages, message]);
+      });
+    }
 
     // Clean up the connection when the component unmounts
     return () => {
       console.log('Disconnecting socket...');
+      if (courseId) {
+        socket.off(`receiveMessage:${courseId}`);
+      } else {
+        socket.off(`receiveMessage:${userId}`);
+      }
       socket.disconnect();
     };
-  }, []);
+  }, [courseId, userId]);
 
   const sendMessage = () => {
     if (!socket) {
@@ -62,7 +78,7 @@ const ChatPage = () => {
       socket.emit('sendMessage', {
         senderId: userId,
         senderName: userName,
-        receiverId: '2', // Replace with actual receiverId
+        courseId: courseId || null, // Include courseId if available, otherwise null for 1-on-1 chat
         message: newMessage,
       });
       setNewMessage('');
@@ -71,7 +87,6 @@ const ChatPage = () => {
 
   return (
     <div>
-      <NavBar/>
       <h1>Chat</h1>
       <p>Logged in as: <strong>{userName}</strong></p>
       <div

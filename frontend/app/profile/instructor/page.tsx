@@ -174,7 +174,7 @@ export default function InstructorDashboard() {
                   <div key={course._id} style={styles.courseCard}>
                     <h3 style={styles.courseTitle}>{course.title}</h3>
                     <p style={styles.courseDescription}>{course.description}</p>
-                    <Link href={`/courses/${course._id}`} style={styles.courseLink}>
+                    <Link href={`/profile/instructor/courses/dashboard/${course._id}`} style={styles.courseLink}>
                       View Course
                     </Link>
                   </div>

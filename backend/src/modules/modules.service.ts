@@ -40,7 +40,7 @@ export class ModulesService {
 
   // Get all modules
   async getAllModules(): Promise<Module[]> {
-    return this.moduleModel.find().populate('courseId').exec(); 
+    return this.moduleModel.find().populate('course_id').exec(); 
   }
   async getModulesByCourseId(courseId: string): Promise<Module[]> {
     return this.moduleModel.find({ course_id: courseId }).exec();
