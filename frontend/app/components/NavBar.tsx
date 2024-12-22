@@ -56,9 +56,6 @@ const NavBar = () => {
 
   return (
     <nav style={styles.nav}>
-      <Link href="/" style={styles.link}>
-        Home
-      </Link>
       <Link href="/auth/register" style={styles.link}>
         Register
       </Link>
