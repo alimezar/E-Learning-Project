@@ -19,10 +19,6 @@ export class ModulesController {
     return this.modulesService.getAllModules();
   }
 
-  
-  
-  
-
   // Get a single module by MongoDB _id
   @Get(':id')
   async getModuleById(@Param('id') id: string): Promise<Module> {
@@ -52,6 +48,7 @@ export class ModulesController {
       throw new HttpException(error.message, error.status || HttpStatus.NOT_FOUND);
     }
   }
+  // Get Modules details for Courses
   @Get('course/:courseId')
   async getModulesByCourseId(@Param('courseId') courseId: string): Promise<{ courseId: string; modules: Module[] }> {
     return this.modulesService.getModulesByCourseIdWithCourseDetails(courseId);
