@@ -119,6 +119,23 @@ const Forum = () => {
       setUserId(user.id);
     }
 
+    // Fetch chat messages from the backend
+    const fetchChatMessages = async () => {
+      try {
+        const res = await fetch(`http://localhost:3001/chat/${courseId}`);
+        if (!res.ok) {
+          throw new Error('Failed to fetch chat messages');
+        }
+        const data = await res.json();
+        setMessages(data); // Populate chat messages
+      } catch (error) {
+        console.error('Error fetching chat messages:', error);
+      }
+    };
+
+    fetchChatMessages();
+
+    // Initialize WebSocket connection
     socket = io('http://localhost:3001', { transports: ['websocket'] });
 
     socket.on(`receiveMessage:${courseId}`, (message: Message) => {
