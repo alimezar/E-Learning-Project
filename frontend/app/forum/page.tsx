@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import NavBar from '../components/NavBar';
@@ -85,8 +86,8 @@ const Forum = () => {
     const threadData = {
       title: newThread.title,
       content: newThread.content,
-      courseId, // Use dynamic courseId
-      userId: user.id, // Pass the userId from the cookie
+      courseId,
+      userId: user.id,
     };
 
     const res = await fetch('http://localhost:3001/threads', {
@@ -127,7 +128,7 @@ const Forum = () => {
           throw new Error('Failed to fetch chat messages');
         }
         const data = await res.json();
-        setMessages(data); // Populate chat messages
+        setMessages(data);
       } catch (error) {
         console.error('Error fetching chat messages:', error);
       }
@@ -136,7 +137,10 @@ const Forum = () => {
     fetchChatMessages();
 
     // Initialize WebSocket connection
-    socket = io('http://localhost:3001', { transports: ['websocket'] });
+    socket = io('http://localhost:3001', {
+      transports: ['websocket'],
+      query: { userId },
+    });
 
     socket.on(`receiveMessage:${courseId}`, (message: Message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
@@ -148,7 +152,7 @@ const Forum = () => {
         socket.disconnect();
       }
     };
-  }, [courseId]);
+  }, [courseId, userId]);
 
   const handleSendMessage = () => {
     if (!socket || !newMessage.trim() || !courseId) return;
