@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 
 export default function UpdateCourse({ params }: { params: { courseId: string } }) {
+  const [courseId, setCourseId] = useState<string | null>(null);
   const [course, setCourse] = useState({
     title: '',
     description: '',
@@ -11,10 +12,20 @@ export default function UpdateCourse({ params }: { params: { courseId: string } 
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const { courseId } = params;
 
   useEffect(() => {
-    // Fetch the course details for the given courseId
+    // Set courseId from params dynamically
+    if (params.courseId) {
+      setCourseId(params.courseId);
+    } else {
+      setError('Course ID is missing.');
+    }
+  }, [params]);
+
+  useEffect(() => {
+    if (!courseId) return;
+
+    // Fetch course details based on courseId
     async function fetchCourseDetails() {
       try {
         const response = await fetch(`http://localhost:3001/courses/${courseId}`, {
@@ -38,7 +49,15 @@ export default function UpdateCourse({ params }: { params: { courseId: string } 
 
   async function handleUpdateCourse(e: React.FormEvent) {
     e.preventDefault();
-
+  
+    if (!courseId) {
+      setError('Course ID is missing.');
+      console.error('Error: Course ID is missing.');
+      return;
+    }
+  
+    console.log('Sending update request:', { courseId, course });
+  
     try {
       const response = await fetch(`http://localhost:3001/courses/${courseId}`, {
         method: 'PUT',
@@ -47,14 +66,15 @@ export default function UpdateCourse({ params }: { params: { courseId: string } 
         },
         body: JSON.stringify(course),
       });
-
+  
+      console.log('Received response:', response.status);
+  
       const data = await response.json();
-
+      console.log('Response data:', data);
+  
       if (response.ok) {
         setSuccess('Course updated successfully!');
-        setTimeout(() => {
-          window.location.href = '/profile/instructor/courses/view'; // Redirect to the View All Courses page
-        }, 1500);
+        
       } else {
         setError(data.message || 'Failed to update course.');
       }
@@ -63,6 +83,7 @@ export default function UpdateCourse({ params }: { params: { courseId: string } 
       setError('An error occurred while updating the course.');
     }
   }
+  
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = event.target;

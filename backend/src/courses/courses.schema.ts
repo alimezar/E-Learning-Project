@@ -34,6 +34,9 @@ export class Course {
 
   @Prop({ type: Boolean, default: false })
   unavailable: boolean;
+
+  @Prop({ type: Date })
+  updatedAt?: Date;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);

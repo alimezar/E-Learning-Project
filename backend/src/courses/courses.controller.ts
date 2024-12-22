@@ -21,11 +21,11 @@ async createCourse(@Body() courseData: Partial<Course>): Promise<Course> {
   }
 }
 
-// Get Course Versions
 @Get(':courseId/versions')
 async getCourseVersions(@Param('courseId') courseId: string): Promise<any[]> {
   return await this.coursesService.getCourseVersions(courseId);
 }
+
 
 @Put(':courseId/unavailable')
 async markCourseUnavailable(@Param('courseId') courseId: string): Promise<void> {
@@ -103,6 +103,7 @@ async updateCourse(
   @Param('courseId') courseId: string,
   @Body() updateData: Partial<Course>,
 ): Promise<Course> {
+  console.log(`Update request received for course ID: ${courseId}`, updateData);
   return this.coursesService.updateCourse(courseId, updateData);
 }
 
@@ -117,14 +118,7 @@ async searchCourses(@Param('query') query: string): Promise<Course[]> {
   return this.coursesService.searchCourses(query);
 }
 
-// Update course with versioning
-@Put(':id/version')
-async updateCourseWithVersion(
-  @Param('id') id: string,
-  @Body() updateData: Partial<Course>,
-): Promise<Course> {
-  return this.coursesService.updateCourseWithVersion(id, updateData);
-}
+
 // Search for a student in a specific course
 
 @Get(':courseId/students/search')
@@ -140,6 +134,11 @@ async searchInstructorInCourse(
   @Query('name') name: string,
 ) {
   return this.coursesService.searchInstructorInCourse(courseId, name);
+}
+
+@Get(':courseId/students')
+async getStudentsForCourse(@Param('courseId') courseId: string): Promise<Users[]> {
+  return this.coursesService.getStudentsForCourse(courseId);
 }
 
 

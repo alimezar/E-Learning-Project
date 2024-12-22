@@ -64,6 +64,10 @@ export default function ViewAllCourses() {
     window.location.href = `/profile/instructor/courses/update/${courseId}`;
   }
 
+  async function handleViewVersions(courseId: string) {
+    window.location.href = `/profile/instructor/courses/versions/${courseId}`;
+  }
+
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>All Courses</h1>
@@ -85,6 +89,9 @@ export default function ViewAllCourses() {
             <button style={styles.buttonUpdate} onClick={() => handleUpdate(course._id)}>
               Update
             </button>
+            <button style={styles.buttonVersions} onClick={() => handleViewVersions(course._id)}>
+              Versions
+            </button>
           </div>
         ))}
       </div>
@@ -104,4 +111,5 @@ const styles = {
   courseDifficulty: { fontSize: '1rem', marginBottom: '0.5rem', color: '#777' },
   buttonDelete: { padding: '0.5rem', backgroundColor: 'red', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
   buttonUpdate: { padding: '0.5rem', backgroundColor: 'blue', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginLeft: '0.5rem' },
+  buttonVersions: { padding: '0.5rem', backgroundColor: 'green', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginLeft: '0.5rem' },
 };
