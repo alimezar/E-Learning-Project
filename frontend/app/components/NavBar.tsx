@@ -7,21 +7,20 @@ const NavBar = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string>(''); // Track the user's ID
 
   // Fetch notifications for the logged-in user
   const fetchNotifications = async () => {
     const cookies = document.cookie;
     const userCookie = cookies.split('; ').find((cookie) => cookie.startsWith('user='));
-    if (!userCookie) {
-      return; // If user is not logged in, do not fetch notifications
-    }
+    if (!userCookie) return; // If user is not logged in, do not fetch notifications
 
     const user = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
+    setUserId(user.id); // Store the user ID for dynamic routing
+
     try {
       const res = await fetch(`http://localhost:3001/notifications/${user.id}`);
-      if (!res.ok) {
-        throw new Error('Failed to fetch notifications');
-      }
+      if (!res.ok) throw new Error('Failed to fetch notifications');
 
       const data = await res.json();
       setNotifications(data);
@@ -37,12 +36,10 @@ const NavBar = () => {
       await fetch(`http://localhost:3001/notifications/mark-as-read/${notificationId}`, {
         method: 'POST',
       });
-      // Update the notifications state after marking as read
+
       setNotifications((prev) =>
         prev.map((notification) =>
-          notification._id === notificationId
-            ? { ...notification, read: true }
-            : notification,
+          notification._id === notificationId ? { ...notification, read: true } : notification,
         ),
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
@@ -68,9 +65,11 @@ const NavBar = () => {
       <Link href="/auth/login" style={styles.link}>
         Login
       </Link>
-      <Link href="/Chat" style={styles.link}>
-        Chat
-      </Link>
+      {userId && (
+        <Link href={`/chat/${userId}`} style={styles.link}>
+          Chat
+        </Link>
+      )}
       <Link href="/forum" style={styles.link}>
         Forum
       </Link>

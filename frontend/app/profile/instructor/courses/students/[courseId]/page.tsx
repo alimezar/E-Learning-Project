@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 interface Student {
   _id: string;
@@ -12,6 +12,7 @@ interface Student {
 export default function StudentsPage() {
   const params = useParams();
   const courseId = params?.courseId;
+  const router = useRouter();
 
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
@@ -55,6 +56,10 @@ export default function StudentsPage() {
     setFilteredStudents(filtered);
   }, [searchQuery, students]);
 
+  const initiateChat = (studentId: string) => {
+    router.push(`/chat/${studentId}`); // Navigate to the chat page for this student
+  };
+
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Students Enrolled in This Course</h1>
@@ -80,6 +85,12 @@ export default function StudentsPage() {
             <li key={student._id} style={styles.student}>
               <h2>{student.name}</h2>
               <p>{student.email}</p>
+              <button
+  style={styles.chatButton}
+  onClick={() => router.push(`/chat/${student._id}`)} // Navigate to chat page
+>
+  Chat
+</button>
             </li>
           ))
         ) : (
@@ -99,4 +110,5 @@ const styles = {
   searchInput: { padding: '0.5rem', fontSize: '1rem', border: '1px solid #ddd', borderRadius: '4px', flexGrow: 1 },
   studentList: { listStyle: 'none', padding: 0 },
   student: { marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' },
+  chatButton: { marginTop: '1rem', padding: '0.5rem 1rem', backgroundColor: '#4CAF50', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
 };
