@@ -119,29 +119,104 @@ async getCourseModules(courseId: string): Promise<any[]> {
   }
 
   async updateCourse(id: string, updateData: Partial<Course>): Promise<Course> {
+    console.log(`\nStarting update for course ID: ${id} with data:`, updateData);
+
+    // 1) Fetch the existing course
+    const existingCourse = await this.courseModel.findById(id).exec();
+    if (!existingCourse) {
+      console.error(`Course with ID ${id} not found.`);
+      throw new NotFoundException(`Course with ID ${id} not found.`);
+    }
+
+    // 2) Debug: Show some info about the existing doc
+    console.log('Existing course fetched:', {
+      title: existingCourse.title,
+      description: existingCourse.description,
+      category: existingCourse.category,
+      difficultyLevel: existingCourse.difficultyLevel,
+      updatedAt: existingCourse.updatedAt,
+      modules: existingCourse.modules,
+      versionsCount: existingCourse.versions.length,
+    });
+
+    // 3) Prepare the "previous version" snapshot
+    const previousVersion = {
+      title: existingCourse.title,
+      description: existingCourse.description,
+      category: existingCourse.category,
+      difficultyLevel: existingCourse.difficultyLevel,
+      modules: existingCourse.modules,
+      multimediaResources: existingCourse.multimediaResources,
+      updatedAt: existingCourse.updatedAt,
+    };
+    console.log('Prepared previous version snapshot:', previousVersion);
+
+    // 4) Modules validation if needed
     if (updateData.modules && Array.isArray(updateData.modules)) {
-        // Convert modules to ObjectIds
-        const moduleIds = updateData.modules.map((moduleId) => 
-            new mongoose.Types.ObjectId(moduleId)
+      console.log('Validating and converting module IDs for new update:', updateData.modules);
+      try {
+        const moduleIds = updateData.modules.map(
+          (moduleId) => new mongoose.Types.ObjectId(moduleId),
         );
-
-        // Validate module IDs
         await this.validateModuleIds(moduleIds);
-
-        // Update the modules field
         updateData.modules = moduleIds as any;
+        console.log('Module IDs validated and converted:', updateData.modules);
+      } catch (error) {
+        console.error('Error validating module IDs:', error);
+        throw new Error('Invalid module IDs provided.');
+      }
     }
 
-    const updatedCourse = await this.courseModel
-        .findByIdAndUpdate(id, updateData, { new: true })
-        .exec();
-
-    if (!updatedCourse) {
-        throw new NotFoundException(`Course with ID ${id} not found.`);
+    // 5) Remove "versions" from the incoming update to avoid conflicts:
+    //    This ensures we only push a new version ourselves and do not overwrite.
+    if ('versions' in updateData) {
+      console.warn(
+        'Incoming data contains "versions". Removing it to prevent conflicts.',
+      );
+      delete updateData.versions;
     }
 
-    return updatedCourse;
-}
+    // 6) Unify the $push and the "update" in a single atomic operation
+    try {
+      const updatedCourse = await this.courseModel.findByIdAndUpdate(
+        id,
+        {
+          // push the old version
+          $push: { versions: previousVersion },
+
+          // set the new fields
+          $set: {
+            // We spread only the fields from updateData, ignoring versions
+            ...updateData,
+          },
+        },
+        { new: true }, // return the updated doc
+      );
+      if (!updatedCourse) {
+        console.error(`Failed to find updated course after update for ID: ${id}`);
+        throw new NotFoundException(`Failed to update course with ID ${id}.`);
+      }
+
+      console.log('Successfully updated course:', {
+        _id: updatedCourse._id,
+        title: updatedCourse.title,
+        description: updatedCourse.description,
+        versionsCount: updatedCourse.versions.length,
+      });
+      return updatedCourse;
+    } catch (error) {
+      console.error(`Error during updateCourse for course ID: ${id}`, error);
+      throw new InternalServerErrorException(
+        `Failed to update course with ID: ${id} - ${error.message}`,
+      );
+    }
+  }
+  
+  
+  
+  
+  
+  
 async getCourseModulesWithDetails(courseId: string): Promise<{ courseId: string; modules: Module[] }> {
   // Validate course existence
   const course = await this.courseModel.findById(courseId).populate('modules').exec();
@@ -184,18 +259,6 @@ async markCourseUnavailable(courseId: string): Promise<void> {
       .exec();
   }
 
-async updateCourseWithVersion(id: string, updateData: Partial<Course>): Promise<Course> {
-  const existingCourse = await this.courseModel.findById(id).exec();
-  if (!existingCourse) throw new Error('Course not found.');
-
-  const newVersion = { ...existingCourse.toObject() };
-  await this.courseModel.findByIdAndUpdate(
-    id,
-    { $push: { versions: newVersion }, ...updateData },
-    { new: true },
-  ).exec();
-  return existingCourse;
-}
 async searchStudentInCourse(courseId: string, email: string): Promise<Users[]> {
   // Convert courseId to ObjectId
   const courseObjectId = new mongoose.Types.ObjectId(courseId);
@@ -334,14 +397,14 @@ async assignCourse(courseId: string, instructorId: string): Promise<Course> {
   return course;
 }
 
-async getCourseVersions(courseId: string): Promise<Course> {
-  const course = await this.courseModel.findById(courseId);
+async getCourseVersions(courseId: string): Promise<any[]> {
+  const course = await this.courseModel.findById(courseId).exec();
 
   if (!course) {
     throw new NotFoundException('Course not found.');
   }
 
-  return course;
+  return course.versions;
 }
 
 }
