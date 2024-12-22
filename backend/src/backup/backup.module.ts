@@ -2,23 +2,25 @@ import { Module } from '@nestjs/common';
 import { BackupService } from './backup.service';
 import { BackupController } from './backup.controller';
 import { UsersModule } from '../users/users.module'; 
+import { ProgressModule } from '../progress/progress.module'; // Added import for ProgressModule
 import * as cron from 'node-cron';
 
 @Module({
-  imports: [UsersModule], 
+  imports: [UsersModule, ProgressModule], // Added ProgressModule
   providers: [
     BackupService,
     {
       provide: 'BackupScheduler',
       useFactory: (backupService: BackupService) => {
-        //backup every 30 min  edit to test
-        cron.schedule('*/30 * * * *', async () => {
-          console.log('backup runing .');
+        // Backup every 30 minutes
+        cron.schedule('*/1 * * * *', async () => {
+          console.log('Backup running...');
           try {
             await backupService.backupUsers();
-            console.log(' backup completed   ');
+            await backupService.backupProgress(); // Added progress backup
+            console.log('Backup completed.');
           } catch (error) {
-            console.error(' backup failed:', error.message);
+            console.error('Backup failed:', error.message);
           }
         });
       },

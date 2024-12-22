@@ -1,0 +1,188 @@
+[
+  {
+    "enrolledCourses": [],
+    "coursesTaught": [],
+    "_id": "674368d9e7b42fdc9259d2aa",
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "passwordHash": "hashedPassword",
+    "role": "student",
+    "profilePictureUrl": "https://example.com/profile.jpg",
+    "createdAt": "2024-11-24T17:56:41.791Z",
+    "updatedAt": "2024-11-24T17:56:41.791Z",
+    "__v": 0
+  },
+  {
+    "coursesTaught": [],
+    "_id": "674afb05e9eb99652abe802f",
+    "name": "Test User",
+    "email": "testuser@gmail.com",
+    "passwordHash": "$2b$10$0jEid2.k5BbUoakeUKB2mum88RoaaUY7r36/tFeZFu8cPVzSUAGqm",
+    "role": "student",
+    "createdAt": "2024-11-30T11:46:13.854Z",
+    "updatedAt": "2024-12-03T11:19:02.059Z",
+    "__v": 2,
+    "enrolledCourses": [
+      "674ee4d159e52dd62d433be5",
+      "674ee74addfec20d53709f26"
+    ]
+  },
+  {
+    "coursesTaught": [],
+    "_id": "674b4b94711d112692a85139",
+    "name": "Ahmed ",
+    "email": "ahmed@gmail.com",
+    "passwordHash": "$2b$10$uGvMK.aDUYkW6DbWex.TN.quP.Pku5Asw6EPOH3Y.9/SRIcNP8H4y",
+    "role": "student",
+    "createdAt": "2024-11-30T17:29:56.856Z",
+    "updatedAt": "2024-12-01T15:32:09.613Z",
+    "__v": 1,
+    "enrolledCourses": [
+      "674069bf8f189db69c17419d"
+    ]
+  },
+  {
+    "coursesTaught": [],
+    "_id": "674b546cf6034693c44d6a55",
+    "name": "aliii",
+    "email": "ali.mezar@gmail.com",
+    "passwordHash": "$2b$10$kA3ZRcvX2lvTLu.8aTdT5OlySJfseONgdIvbr5rMmbIb68/EGMpmW",
+    "role": "student",
+    "createdAt": "2024-11-30T18:07:40.540Z",
+    "updatedAt": "2024-12-01T16:52:20.811Z",
+    "__v": 1,
+    "enrolledCourses": [
+      "674069bf8f189db69c17419d"
+    ]
+  },
+  {
+    "coursesTaught": [],
+    "_id": "674dfc421614e737bb612e50",
+    "name": "ks",
+    "email": "ks@gmail.com",
+    "passwordHash": "$2b$10$/gF6Qv7Xk1OeMYENqON0NOyx3rsNUA1I/PRas0hJ3aQfXoAMZevke",
+    "role": "student",
+    "enrolledCourses": [],
+    "createdAt": "2024-12-02T18:28:18.624Z",
+    "updatedAt": "2024-12-02T18:28:18.624Z",
+    "__v": 0
+  },
+  {
+    "_id": "674ef30b0953709c1602ca00",
+    "name": "TestInstructor",
+    "email": "testinstructor@example.com",
+    "passwordHash": "$2b$10$9XTh1uzF/uyFlCgvqXsmYOTxnOMP9kV933BMeNt2TQ1lIeVcG8fRO",
+    "role": "instructor",
+    "enrolledCourses": [],
+    "coursesTaught": [
+      "674ee74addfec20d53709f26"
+    ],
+    "createdAt": "2024-12-03T12:01:15.834Z",
+    "updatedAt": "2024-12-03T12:02:46.263Z",
+    "__v": 1
+  },
+  {
+    "_id": "675ed61d108d62536ca8a7e4",
+    "name": "Test",
+    "email": "test@hotmail.com",
+    "passwordHash": "$2b$10$3i/0UIMG2lO4SqrEaFzWwub/hEjZxBsG3MMjWDp8OMCrJjZcwf6j6",
+    "role": "student",
+    "enrolledCourses": [
+      "674069bf8f189db69c17419d",
+      "674ee4d159e52dd62d433be5",
+      "674ee74addfec20d53709f26"
+    ],
+    "coursesTaught": [],
+    "createdAt": "2024-12-15T13:14:05.894Z",
+    "updatedAt": "2024-12-21T23:44:58.440Z",
+    "__v": 3
+  },
+  {
+    "_id": "675f672582063256ad788226",
+    "name": "Koshty",
+    "email": "mkoshty@hotmail.com",
+    "passwordHash": "$2b$10$9gxBAJ9MxDSc2GIUzGDt4u0AhnVErCx8hfhAwab0o8sr0EWMeLxTy",
+    "role": "student",
+    "enrolledCourses": [
+      "674ee4d159e52dd62d433be5",
+      "674ee74addfec20d53709f26"
+    ],
+    "coursesTaught": [],
+    "createdAt": "2024-12-15T23:32:53.534Z",
+    "updatedAt": "2024-12-21T23:45:40.608Z",
+    "__v": 2
+  },
+  {
+    "_id": "67655a468f4a07f1b6a22c39",
+    "name": "instructor",
+    "email": "ins@gmail.com",
+    "passwordHash": "$2b$10$kp02QHjzBgER0eyIFK/UwOSTi28As88jn6FsNcxdavVXbOFQI4CYm",
+    "role": "instructor",
+    "enrolledCourses": [
+      "6755d28e6426acf7053ccaed"
+    ],
+    "coursesTaught": [
+      "6755d3512eedb1d1ba19485e",
+      "6755d28e6426acf7053ccaed",
+      "67668a5f8c6297e59d0ce02b",
+      "6766927bb30723c771c423b3",
+      "674ee4d159e52dd62d433be5"
+    ],
+    "createdAt": "2024-12-20T11:51:34.043Z",
+    "updatedAt": "2024-12-22T12:15:02.159Z",
+    "__v": 2
+  },
+  {
+    "_id": "67655d448f4a07f1b6a22c5b",
+    "name": "admin",
+    "email": "adm@gmail.com",
+    "passwordHash": "$2b$10$lSB0QKwmE4zEhJXSGbMLNuhUimn/Xzay.gtMsWiXS26Uhu/mKlLLy",
+    "role": "admin",
+    "enrolledCourses": [],
+    "coursesTaught": [],
+    "createdAt": "2024-12-20T12:04:20.995Z",
+    "updatedAt": "2024-12-20T12:04:20.995Z",
+    "__v": 0
+  },
+  {
+    "_id": "67655ea68f4a07f1b6a22c61",
+    "name": "Ali",
+    "email": "z@g.com",
+    "passwordHash": "$2b$10$N.9Y95oubG7E92aYFxaGx.5QLyEr.290XandDEBvEsii5EGNPKNl.",
+    "role": "student",
+    "enrolledCourses": [
+      "674ee4d159e52dd62d433be5",
+      "674ee74addfec20d53709f26"
+    ],
+    "coursesTaught": [],
+    "createdAt": "2024-12-20T12:10:14.505Z",
+    "updatedAt": "2024-12-20T16:11:23.838Z",
+    "__v": 2
+  },
+  {
+    "_id": "67658ff8c7982804b8a42bb2",
+    "name": "hos",
+    "email": "hos@gmail.com",
+    "passwordHash": "$2b$10$PamaOGMZ4sHWfqOYUJt8GeSctQb1uqmoJa7gHpv9nKAJl3BTkUhXK",
+    "role": "student",
+    "enrolledCourses": [],
+    "coursesTaught": [],
+    "createdAt": "2024-12-20T15:40:40.738Z",
+    "updatedAt": "2024-12-20T15:40:40.738Z",
+    "__v": 0
+  },
+  {
+    "_id": "676827186ce28d6fd35768e0",
+    "name": "zeyad Gobran",
+    "email": "Zeyadgobran@gmail.com",
+    "passwordHash": "$2b$10$j.lHv1uDpepie62TBfQCZuUx5aOiXKJ8Qt007W7CmOpD7dekqDYoS",
+    "role": "student",
+    "enrolledCourses": [
+      "6755d3512eedb1d1ba19485e"
+    ],
+    "coursesTaught": [],
+    "createdAt": "2024-12-22T14:50:00.923Z",
+    "updatedAt": "2024-12-22T14:52:07.901Z",
+    "__v": 1
+  }
+]

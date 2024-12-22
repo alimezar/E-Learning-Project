@@ -122,15 +122,65 @@ export class ProgressService {
       .exec();
   }
 
+  async getAllProgressForUser(userId: string): Promise<Progress[]> {
+    const userObjectId = new Types.ObjectId(userId); // Ensure userId is an ObjectId
+  
+    const progresses = await this.progressModel
+      .find({ userId: userObjectId }) // Match userId as ObjectId
+      .populate('courseId') // Populate course details
+      .exec();
+  
+    // Debugging logs
+    console.log(`Progresses for user ${userId}:`, progresses);
+  
+    return progresses;
+  }
+  
+  
+  // New method: Get all progresses for all students grouped by course
+  async getAllProgresses(): Promise<any[]> {
+    return this.progressModel
+      .aggregate([
+        {
+          $lookup: {
+            from: 'users', // Match the name of the Users collection
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userInfo',
+          },
+        },
+        {
+          $lookup: {
+            from: 'courses', // Match the name of the Courses collection
+            localField: 'courseId',
+            foreignField: '_id',
+            as: 'courseInfo',
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            userId: 1,
+            courseId: 1,
+            completedPercentage: 1,
+            completedCourses: 1,
+            last_accessed: 1,
+            averageScore: 1,
+            userInfo: { $arrayElemAt: ['$userInfo', 0] }, // Get the first user record
+            courseInfo: { $arrayElemAt: ['$courseInfo', 0] }, // Get the first course record
+          },
+        },
+      ])
+      .exec();
+  }
+
   //=============================================== INSTRUCTOR PROGRESS ===============================================
   async getStudentProgressByCourse(courseId: string) {
-    // First, find the course
     const course = await this.courseModel.findById(courseId).exec();
     if (!course) {
       throw new NotFoundException('Course not found');
     }
   
-    // Find the student who is enrolled in the course
     const student = await this.userModel
       .findOne({ role: 'student', enrolledCourses: courseId })
       .exec();
@@ -138,7 +188,6 @@ export class ProgressService {
       throw new NotFoundException('Student for this course not found');
     }
   
-    // Now, find the progress for the student in this course
     const progress = await this.progressModel
       .findOne({ userId: student._id, courseId })
       .exec();
@@ -146,7 +195,6 @@ export class ProgressService {
       throw new NotFoundException('Progress not found for this student in the course');
     }
   
-    // Return student progress details
     return {
       studentId: student._id,
       studentName: student.name,
@@ -157,5 +205,4 @@ export class ProgressService {
       averageScore: progress.averageScore,
     };
   }
-  
 }

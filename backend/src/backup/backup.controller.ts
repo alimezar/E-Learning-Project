@@ -8,6 +8,12 @@ export class BackupController {
   @Post('users')
   async backupUsers(): Promise<string> {
     await this.backupService.backupUsers();
-    return 'backup succfuly done  ';
+    return 'Users backup successfully done.';
+  }
+
+  @Post('progress')
+  async backupProgress(): Promise<string> {
+    await this.backupService.backupProgress();
+    return 'Progress backup successfully done.';
   }
 }

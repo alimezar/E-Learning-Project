@@ -1,0 +1,38 @@
+[
+  {
+    "_id": "67685184e5e11f771448b10c",
+    "userId": "674e4cb957efb9ba4436a2ad",
+    "courseId": "674ee4d159e52dd62d433be5",
+    "completedPercentage": 0,
+    "completedCourses": [],
+    "averageScore": 0,
+    "last_accessed": "2024-12-22T17:51:00.422Z",
+    "createdAt": "2024-12-22T17:51:00.423Z",
+    "updatedAt": "2024-12-22T17:51:00.423Z",
+    "__v": 0
+  },
+  {
+    "_id": "676881adc8a49e1938f6cac0",
+    "userId": "676827186ce28d6fd35768e0",
+    "courseId": "674ee4d159e52dd62d433be5",
+    "completedPercentage": 0,
+    "completedCourses": [],
+    "averageScore": 0,
+    "last_accessed": "2024-12-22T21:16:29.021Z",
+    "createdAt": "2024-12-22T21:16:29.025Z",
+    "updatedAt": "2024-12-22T21:16:29.025Z",
+    "__v": 0
+  },
+  {
+    "_id": "6768972c448ea7cf0826989f",
+    "userId": "67655ea68f4a07f1b6a22c61",
+    "courseId": "674ee74addfec20d53709f26",
+    "completedPercentage": 0,
+    "completedCourses": [],
+    "averageScore": 0,
+    "last_accessed": "2024-12-22T22:48:12.576Z",
+    "createdAt": "2024-12-22T22:48:12.583Z",
+    "updatedAt": "2024-12-22T22:48:12.583Z",
+    "__v": 0
+  }
+]
