@@ -80,10 +80,8 @@ async getCourseModulesWithDetails(
 
 // Get Course Modules 
 @Get(':courseId/modules')
-async getCourseModules(
-  @Param('courseId') courseId: string,
-): Promise<string[]> {
-  return this.coursesService.getCourseModules(courseId);
+async getCourseModules(@Param('courseId') courseId: string): Promise<Module[]> {
+  return this.coursesService.getModulesByCourse(courseId);
 }
 
   @Get('user/:userId')
