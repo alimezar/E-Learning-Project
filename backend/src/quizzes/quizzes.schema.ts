@@ -5,9 +5,6 @@ export type QuizDocument = Quizzes & Document;
 
 @Schema()
 export class Quizzes {
-  @Prop({ type: Types.ObjectId, ref: 'Users', required: true }) 
-  userId: Types.ObjectId;
-
   @Prop({ type: Types.ObjectId, ref: 'Module', required: true }) 
   moduleId: Types.ObjectId;
 

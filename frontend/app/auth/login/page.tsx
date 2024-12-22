@@ -19,7 +19,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-
+  
     try {
       const response = await fetch('http://localhost:3001/auth/login', {
         method: 'POST',
@@ -29,43 +29,19 @@ export default function Login() {
         body: JSON.stringify(formData),
         credentials: 'include', // Important to send and receive cookies
       });
-
+  
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Login failed');
       }
-
+  
       const result = await response.json();
-
-      // Parse the user role from the 'user' cookie or the response
-      const userCookie = document.cookie
-        .split('; ')
-        .find((cookie) => cookie.startsWith('user='));
-
-      if (!userCookie) {
-        throw new Error('User data not found. Login failed.');
-      }
-
-      const userData = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
-
-      // Redirect based on role
-      switch (userData.role) {
-        case 'student':
-          router.push('/profile/student');
-          break;
-        case 'instructor':
-          router.push('/profile/instructor');
-          break;
-        case 'admin':
-          router.push('/profile/admin');
-          break;
-        default:
-          throw new Error('Unknown user role');
-      }
+      router.push('/profile');
     } catch (error: any) {
       setErrorMessage(error.message);
     }
   };
+  
 
   return (
     <section style={{ maxWidth: '400px', margin: '2rem auto', textAlign: 'center' }}>

@@ -9,18 +9,13 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 
-@WebSocketGateway({
-  cors: {
-    origin: '*', // Replace with your frontend URL if necessary
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type'],
-    credentials: true,
-  },
-})
+@WebSocketGateway({ cors: {     origin: "*",  // Or your frontend URL
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"], credentials: true } })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly chatService: ChatService) {  console.log('ChatGateway initialized');}
 
   handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
@@ -28,38 +23,33 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
-  }
+  }a
 
   @SubscribeMessage('sendMessage')
   async handleMessage(
-    @MessageBody() data: { senderId: string; senderName: string; courseId?: string; message: string }
+    @MessageBody() data: { senderId: string; senderName: string; receiverId: string; message: string },
   ) {
-    console.log('Received WebSocket message:', data);
-
-    // Save the message to the database
+    console.log('Received message data:', data); // Log the received data
+  
+    // Save message to database
     const savedMessage = await this.chatService.saveMessage(data);
-
-    // Determine the broadcast channel
-    const channel = data.courseId ? `receiveMessage:${data.courseId}` : `receiveMessage:${data.senderId}`;
-
-    // Broadcast the message to the appropriate channel
-    this.server.emit(channel, {
+  
+    console.log('Saved message:', savedMessage); // Log the saved message
+    
+    // Broadcast message with senderName
+    this.server.emit('receiveMessage', {
       senderId: savedMessage.senderId,
-      senderName: savedMessage.senderName,
-      courseId: savedMessage.courseId || null,
+      senderName: savedMessage.senderName, // Include senderName
+      receiverId: savedMessage.receiverId,
       message: savedMessage.message,
       timestamp: savedMessage.timestamp,
     });
   }
-
-  @SubscribeMessage('fetchMessages')
-  async handleFetchMessages(
-    @MessageBody() data: { userId: string; courseId?: string }
-  ) {
-    console.log('Fetching messages for:', data);
-
-    const messages = await this.chatService.getMessagesByContext(data.userId, data.courseId);
-    const channel = data.courseId ? `userMessages:${data.courseId}` : `userMessages:${data.userId}`;
-    this.server.emit(channel, messages);
+  
+@SubscribeMessage('fetchMessages')
+  async handleFetchMessages(@MessageBody() userId: string) {
+    const userMessages = await this.chatService.getUserMessages(userId);
+    this.server.emit('userMessages', userMessages); // Send the messages to the client
   }
+
 }

@@ -12,6 +12,6 @@ import { ProgressController } from './progress.controller';
   ],
   providers: [ProgressService],
   controllers: [ProgressController], 
-  exports: [ProgressService, MongooseModule],
+  exports: [ProgressService],
 })
 export class ProgressModule {}

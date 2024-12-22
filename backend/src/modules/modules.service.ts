@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Module, ModuleDocument } from './modules.schema';
 import { Course } from '../courses/courses.schema';
 
@@ -20,27 +20,14 @@ export class ModulesService {
 
   // Create a new module
   async createModule(moduleData: Partial<Module>): Promise<Module> {
-    // Convert course_id to ObjectId
-    const courseId = new Types.ObjectId(moduleData.course_id);
-    await this.validateCourseId(courseId.toString());
-    
-    // Update the module data with the ObjectId course_id
-    moduleData.course_id = courseId;
-
+    await this.validateCourseId(moduleData.course_id.toString());
     const newModule = new this.moduleModel(moduleData);
-    const savedModule = await newModule.save();
-
-    // Update the course's modules field to include the new module
-    await this.courseModel.findByIdAndUpdate(courseId, {
-        $push: { modules: savedModule._id },
-    });
-
-    return savedModule;
-}
+    return newModule.save();
+  }
 
   // Get all modules
   async getAllModules(): Promise<Module[]> {
-    return this.moduleModel.find().populate('course_id').exec(); 
+    return this.moduleModel.find().populate('courseId').exec(); 
   }
   async getModulesByCourseId(courseId: string): Promise<Module[]> {
     return this.moduleModel.find({ course_id: courseId }).exec();

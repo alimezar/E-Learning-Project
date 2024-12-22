@@ -4,12 +4,11 @@ import { Course, CourseSchema } from './courses.schema';
 import { CoursesService } from './courses.service';
 import { CoursesController } from './courses.controller';
 import { UsersModule } from 'src/users/users.module';
-import { ModulesModule } from 'src/modules/modules.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Course.name, schema: CourseSchema }]),
-    forwardRef(() => UsersModule), forwardRef(() => ModulesModule), // Use forwardRef
+    forwardRef(() => UsersModule), // Use forwardRef
   ],
   providers: [CoursesService],
   controllers: [CoursesController],

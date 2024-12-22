@@ -16,12 +16,9 @@ export class Course {
 
   @Prop({ required: true, enum: ['Beginner', 'Intermediate', 'Advanced'] })
   difficultyLevel: 'Beginner' | 'Intermediate' | 'Advanced';
-  
-  @Prop({ required: false })
-  createdBy?: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Users', required: false })
-  createdById?: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true }) 
+  createdBy: Types.ObjectId;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Module' }] })
   modules: Types.ObjectId[]; 
@@ -31,12 +28,6 @@ export class Course {
 
   @Prop({ type: [Object], default: [] })
   versions: Record<string, any>[]; 
-
-  @Prop({ type: Boolean, default: false })
-  unavailable: boolean;
-
-  @Prop({ type: Date })
-  updatedAt?: Date;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);
