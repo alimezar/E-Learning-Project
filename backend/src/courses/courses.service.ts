@@ -213,6 +213,13 @@ async getCourseModules(courseId: string): Promise<any[]> {
   }
   
   
+  async getStudentsForCourse(courseId: string): Promise<Users[]> {
+    const courseObjectId = new mongoose.Types.ObjectId(courseId);
+  
+    return this.userModel.find({ enrolledCourses: courseObjectId }, 'name email').exec();
+  }
+  
+  
   
   
   

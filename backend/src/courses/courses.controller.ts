@@ -136,6 +136,11 @@ async searchInstructorInCourse(
   return this.coursesService.searchInstructorInCourse(courseId, name);
 }
 
+@Get(':courseId/students')
+async getStudentsForCourse(@Param('courseId') courseId: string): Promise<Users[]> {
+  return this.coursesService.getStudentsForCourse(courseId);
+}
+
 
 
 @Post('assign/:courseId')
