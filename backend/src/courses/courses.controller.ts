@@ -22,10 +22,10 @@ async createCourse(@Body() courseData: Partial<Course>): Promise<Course> {
 }
 
 // Get Course Versions
-@Get(':courseId/versions')
-async getCourseVersions(@Param('courseId') courseId: string): Promise<any[]> {
-  return await this.coursesService.getCourseVersions(courseId);
-}
+//@Get(':courseId/versions')
+//async getCourseVersions(@Param('courseId') courseId: string): Promise<any[]> {
+  //return await this.coursesService.getCourseVersions(courseId);
+//}
 
 @Put(':courseId/unavailable')
 async markCourseUnavailable(@Param('courseId') courseId: string): Promise<void> {

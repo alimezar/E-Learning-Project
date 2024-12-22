@@ -1,33 +1,51 @@
 import { Injectable } from '@nestjs/common';
-import { connectToMainDB, connectToBackupDB } from './mongo-connections';
-import { CreateBackupDto } from './dto/create-backup.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import * as fs from 'fs';
+import * as path from 'path';
+
+import { Users } from '../users/users.schema';
 
 @Injectable()
 export class BackupService {
-  async backupImportantData(dto: CreateBackupDto): Promise<void> {
-    const { includeSensitiveData, collections } = dto;
+  constructor(
+    @InjectModel('Users') private readonly userModel: Model<Users>, // main database  users model
+  ) {}
 
+  async backupUsers(): Promise<void> {
     try {
-      const mainDb = await connectToMainDB();
-      const backupDb = await connectToBackupDB();
+      console.log('starting backup ');
 
-      for (const collection of collections) {
-        const data = await mainDb.collection(collection).find().toArray();
+      
+      const users = await this.userModel.find().exec();
+      console.log(`fetched ${users.length} users database.`);
 
-        if (!includeSensitiveData) {
-          data.forEach((item) => delete item.password); // Remove sensitive fields
+      
+      try {
+        const backupModel = this.userModel.db.useDb('backup').model('Users', this.userModel.schema);
+        await backupModel.insertMany(users);
+        console.log('backup completed successfully .');
+      } catch (dbError) {
+        console.error('failed  to  connect to  mongo database saving data locally');
+
+        
+        const backupFolderPath = path.resolve(__dirname, '../../backups'); 
+        if (!fs.existsSync(backupFolderPath)) {
+          fs.mkdirSync(backupFolderPath, { recursive: true }); 
         }
 
-        await backupDb.collection(collection).insertMany(data);
-        console.log(`Backup completed for collection: ${collection}`);
-      }
+        
+        const backupFileName = `users-backup-${new Date().toISOString().replace(/:/g, '-')}.json`; 
+        const backupFilePath = path.join(backupFolderPath, backupFileName);
 
-      console.log('All backups completed successfully');
+        fs.writeFileSync(backupFilePath, JSON.stringify(users, null, 2));
+        console.log('data saved locally ');
+
+        
+      }
     } catch (error) {
-      console.error('Error during backup:', error);
+      console.error('Error during the backup process:', error.message);
+      throw error;
     }
   }
 }
-
-// Ensure this export is present
-export default BackupService;
