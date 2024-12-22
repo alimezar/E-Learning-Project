@@ -6,6 +6,11 @@ import { Progress } from './progress.schema';
 export class ProgressController {
   constructor(private readonly progressService: ProgressService) {}
 
+  @Get()
+  async getAllProgress(): Promise<Progress[]> {
+    return this.progressService.getAllProgress();
+  }
+  
   @Post()
   async initializeProgress(@Body() body: { userId: string; courseId: string }) {
     return this.progressService.createProgress(body.userId, body.courseId);
