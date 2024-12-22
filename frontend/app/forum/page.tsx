@@ -1,6 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import NavBar from '../components/NavBar';
+import { io, Socket } from 'socket.io-client';
+
+let socket: Socket | null = null;
 
 interface Thread {
   _id: string;
@@ -10,7 +14,19 @@ interface Thread {
   userName: string;
 }
 
-const Forum = ({ courseId }: { courseId: string }) => {
+interface Message {
+  senderId: string;
+  senderName: string;
+  courseId: string;
+  message: string;
+  _id?: string;
+  timestamp?: string;
+}
+
+const Forum = () => {
+  const searchParams = useSearchParams();
+  const courseId = searchParams.get('courseId'); // Dynamically retrieve courseId from URL query params
+
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,11 +35,21 @@ const Forum = ({ courseId }: { courseId: string }) => {
     content: '',
   });
 
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState<string>('');
+  const [userName, setUserName] = useState<string>('');
+  const [userId, setUserId] = useState<string>('');
+
   // Fetch threads by courseId
   const fetchThreads = async () => {
+    if (!courseId) {
+      setError('Course ID is missing. Please check the URL.');
+      return;
+    }
+
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:3001/threads/${courseId || '12345'}`);
+      const res = await fetch(`http://localhost:3001/threads/${courseId}`);
       if (!res.ok) {
         throw new Error('Failed to fetch threads');
       }
@@ -42,6 +68,11 @@ const Forum = ({ courseId }: { courseId: string }) => {
   }, [courseId]);
 
   const handleCreateThread = async () => {
+    if (!courseId) {
+      alert('Error: Course ID is missing. Please check the URL.');
+      return;
+    }
+
     const cookies = document.cookie;
     const userCookie = cookies.split('; ').find((cookie) => cookie.startsWith('user='));
     if (!userCookie) {
@@ -51,26 +82,68 @@ const Forum = ({ courseId }: { courseId: string }) => {
 
     const user = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
 
-    // Send new thread data including userId to the backend
+    const threadData = {
+      title: newThread.title,
+      content: newThread.content,
+      courseId, // Use dynamic courseId
+      userId: user.id, // Pass the userId from the cookie
+    };
+
     const res = await fetch('http://localhost:3001/threads', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        title: newThread.title,
-        content: newThread.content,
-        courseId: courseId || '12345', // Use dynamic courseId
-        userId: user.id, // Pass the userId from the cookie
-      }),
+      body: JSON.stringify(threadData),
     });
 
     if (res.ok) {
-      setNewThread({ title: '', content: '' }); // Clear form after submission
-      fetchThreads(); // Reload threads
+      setNewThread({ title: '', content: '' });
+      fetchThreads();
     } else {
-      alert('Failed to create thread');
+      const error = await res.json();
+      console.error('Failed to create thread:', error);
+      alert(`Failed to create thread: ${error.message}`);
     }
+  };
+
+  // Chat functionality
+  useEffect(() => {
+    if (!courseId) return;
+
+    const cookies = document.cookie;
+    const userCookie = cookies.split('; ').find((cookie) => cookie.startsWith('user='));
+    if (userCookie) {
+      const user = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
+      setUserName(user.name);
+      setUserId(user.id);
+    }
+
+    socket = io('http://localhost:3001', { transports: ['websocket'] });
+
+    socket.on(`receiveMessage:${courseId}`, (message: Message) => {
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
+
+    return () => {
+      if (socket) {
+        socket.off(`receiveMessage:${courseId}`);
+        socket.disconnect();
+      }
+    };
+  }, [courseId]);
+
+  const handleSendMessage = () => {
+    if (!socket || !newMessage.trim() || !courseId) return;
+
+    socket.emit('sendMessage', {
+      senderId: userId,
+      senderName: userName,
+      courseId,
+      message: newMessage,
+    });
+
+    setNewMessage('');
   };
 
   const styles = {
@@ -86,7 +159,7 @@ const Forum = ({ courseId }: { courseId: string }) => {
     header: {
       fontSize: '2em',
       color: '#333',
-      textAlign: 'center' as 'center',  // Corrected type for textAlign
+      textAlign: 'center' as 'center',
       marginBottom: '20px',
     },
     formContainer: {
@@ -103,7 +176,7 @@ const Forum = ({ courseId }: { courseId: string }) => {
       border: '1px solid #ccc',
       borderRadius: '5px',
       fontSize: '1em',
-      boxSizing: 'border-box' as 'border-box',  // Fixed boxSizing value
+      boxSizing: 'border-box' as 'border-box',
     },
     textarea: {
       width: '100%',
@@ -112,7 +185,7 @@ const Forum = ({ courseId }: { courseId: string }) => {
       border: '1px solid #ccc',
       borderRadius: '5px',
       fontSize: '1em',
-      boxSizing: 'border-box' as 'border-box',  // Fixed boxSizing value
+      boxSizing: 'border-box' as 'border-box',
       height: '150px',
     },
     button: {
@@ -145,19 +218,45 @@ const Forum = ({ courseId }: { courseId: string }) => {
       display: 'inline-block',
       marginTop: '10px',
     },
+    chatContainer: {
+      marginTop: '40px',
+      padding: '20px',
+      backgroundColor: '#fff',
+      borderRadius: '8px',
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    },
+    chatBox: {
+      border: '1px solid #ccc',
+      padding: '1rem',
+      height: '300px',
+      overflowY: 'scroll' as 'scroll',
+      marginBottom: '10px',
+    },
+    chatInput: {
+      width: 'calc(100% - 100px)',
+      padding: '10px',
+      border: '1px solid #ccc',
+      borderRadius: '5px',
+      marginRight: '10px',
+    },
+    sendButton: {
+      padding: '10px 20px',
+      backgroundColor: '#4CAF50',
+      color: 'white',
+      border: 'none',
+      borderRadius: '5px',
+      cursor: 'pointer',
+    },
   };
-  
-  
+
   return (
     <div style={styles.container}>
-      <NavBar/>
+      <NavBar />
       <h1 style={styles.header}>Forum</h1>
 
-      {/* Loading and error feedback */}
+      {/* Threads */}
       {loading && <p>Loading threads...</p>}
       {error && <p>{error}</p>}
-
-      {/* Create Thread Form */}
       <div style={styles.formContainer}>
         <h2>Create a New Thread</h2>
         <input
@@ -177,23 +276,44 @@ const Forum = ({ courseId }: { courseId: string }) => {
           Create Thread
         </button>
       </div>
-
       <ul style={styles.threadList}>
-        {threads.length > 0 ? (
-          threads.map((thread) => (
-            <li key={thread._id} style={styles.threadItem}>
-              <p>
-                <strong>{thread.title}</strong> by {thread.userName}
-              </p>
-              <a href={`/thread/${thread._id}`} style={styles.link}>
-                View Thread
-              </a>
-            </li>
-          ))
-        ) : (
-          <p>No threads available.</p>
-        )}
+        {threads.map((thread) => (
+          <li key={thread._id} style={styles.threadItem}>
+            <p>
+              <strong>{thread.title}</strong> by {thread.userName}
+            </p>
+            <a href={`/thread/${thread._id}`} style={styles.link}>
+              View Thread
+            </a>
+          </li>
+        ))}
       </ul>
+
+      {/* Study Group Chat */}
+      <div style={styles.chatContainer}>
+        <h2>Study Group Chat</h2>
+        <div style={styles.chatBox}>
+          <ul>
+            {messages.map((msg, index) => (
+              <li key={index}>
+                <strong>{msg.senderName || msg.senderId}:</strong> {msg.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type a message..."
+            style={styles.chatInput}
+          />
+          <button onClick={handleSendMessage} style={styles.sendButton}>
+            Send
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -113,6 +113,13 @@ export default function Resources() {
           ))
         )}
       </section>
+
+      <button
+        style={styles.viewButton}
+        onClick={() => window.location.href = `/forum?courseId=${courseId}`}
+      >
+        Go to Forum
+      </button>
     </div>
   );
 }

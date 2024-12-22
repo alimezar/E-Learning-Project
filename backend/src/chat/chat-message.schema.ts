@@ -7,10 +7,10 @@ export class ChatMessage extends Document {
   senderId: string;
 
   @Prop({ required: true })
-  senderName: string; // Add senderName to the schema
+  senderName: string;
 
-  @Prop({ required: true })
-  receiverId: string;
+  @Prop({ required: false })
+  courseId?: string; // Include courseId to filter messages by course
 
   @Prop({ required: true })
   message: string;
