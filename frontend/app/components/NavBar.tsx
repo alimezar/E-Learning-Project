@@ -70,9 +70,7 @@ const NavBar = () => {
           Chat
         </Link>
       )}
-      <Link href="/forum" style={styles.link}>
-        Forum
-      </Link>
+
 
       <div style={styles.notificationWrapper}>
         <button onClick={toggleDropdown} style={styles.notificationButton}>

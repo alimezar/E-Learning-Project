@@ -1,5 +1,6 @@
 'use client';
 
+import NavBar from '@/app/components/NavBar';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -50,7 +51,12 @@ export default function StudentDashboard() {
   }, []);
 
   return (
+    
     <div style={styles.container}>
+      <NavBar/>
+
+
+      
       {/* Top Section: Welcome Message and Navbar */}
       <div style={styles.header}>
         <div style={styles.welcome}>{username ? `Welcome, ${username}` : 'Loading...'}</div>

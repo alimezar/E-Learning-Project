@@ -1,23 +1,15 @@
-// /app/layout.tsx
-import './globals.css';
-import NavBar from './components/NavBar';
+'use client';
 
-export const metadata = {
-  title: 'E-Learning Platform',
-  description: 'Your one-stop learning solution!',
-};
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>
-        <NavBar />
-        <main>{children}</main>
-      </body>
-    </html>
-  );
+export default function RootLayout() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Automatically redirect to login
+    router.push('/auth/login');
+  }, [router]);
+
+  return null; // No content is rendered as the page immediately redirects
 }

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import NavBar from '../components/NavBar';
 
 export default function student() {
   const [username, setUsername] = useState<string | null>(null);
