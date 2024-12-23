@@ -15,6 +15,9 @@ export class Response {
 
   @Prop()
   score?: number;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Questions'}], required: true })
+  questions: Types.ObjectId[];
 }
 
 export const ResponseSchema = SchemaFactory.createForClass(Response);

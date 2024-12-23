@@ -7,11 +7,13 @@ import { QuizModule } from '../quizzes/quizzes.module';
 import { UsersModule } from '../users/users.module';
 import { ProgressModule } from '../progress/progress.module';
 import { ModulesModule } from '../modules/modules.module'; 
+import { QuestionsModule } from '../questions/questions.module';
+
 
 @Module({
   imports: [
   MongooseModule.forFeature([{ name: Response.name, schema: ResponseSchema }]), QuizModule, UsersModule, 
-   ProgressModule, ModulesModule],
+   ProgressModule, ModulesModule, QuestionsModule],
   providers: [ResponseService],
   controllers: [ResponseController],
 })

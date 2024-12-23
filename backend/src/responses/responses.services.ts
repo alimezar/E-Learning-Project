@@ -6,6 +6,7 @@ import { Quizzes } from '../quizzes/quizzes.schema';
 import { Users } from '../users/users.schema';
 import { Progress } from '../progress/progress.schema';
 import { Module } from '../modules/modules.schema'
+import { Questions, QuestionDocument } from '../questions/questions.schema';
 
 
 @Injectable()
@@ -16,6 +17,7 @@ export class ResponseService {
     @InjectModel('Users') private userModel: Model<Users>, // Inject User model
     @InjectModel('Progress') private readonly progressModel: Model<Progress>, //Inject Progress model
     @InjectModel('Module') private readonly moduleModel: Model<Module>, //Inject Module model
+    @InjectModel('Questions') private readonly questionModel: Model<QuestionDocument>, // Inject Question model
   ) {}
 
   // Validate quizId
@@ -58,7 +60,9 @@ export class ResponseService {
       }
     })
 
-    const newResponse = new this.responseModel({ ...responseData, quizId, userId, score });
+
+    const questions = quiz.questions;
+    const newResponse = new this.responseModel({ ...responseData, quizId, userId, score, questions });
     await newResponse.save();
 
     const moduleId = quiz.moduleId;
