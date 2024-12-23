@@ -75,18 +75,30 @@ export class QuizService {
   
     // Determine quiz difficulty based on averageScore
     let difficulty: string;
-    if (averageScore < 2) {
+
+    // Calculate averageScore as a percentage of the total possible score
+
+    const size = quizData.size ?? 5;
+    const totalQuestions = size
+    const scorePercentage = (averageScore / totalQuestions) * 100;
+
+    console.log("totalQuestions: "+totalQuestions)
+    console.log("score percetnage: "+scorePercentage)
+
+    // Determine difficulty based on percentage thresholds
+    if (scorePercentage < 40) {
       difficulty = 'easy';
-    } else if (averageScore >= 2 && averageScore < 4) {
+    } else if (scorePercentage >= 40 && scorePercentage < 80) {
       difficulty = 'medium';
     } else {
       difficulty = 'hard';
     }
-  
+
+
     // Fetch 5 random questions matching the module and difficulty
     const questions = await this.questionModel.aggregate([
       { $match: { moduleId: quizData.moduleId.toString(), difficulty  } }, // Match by moduleId and difficulty
-      { $sample: { size: 5 } }, // Randomly select 5 questions
+      { $sample: { size: totalQuestions } }, // Randomly select 5 questions
     ]);
   
     if (questions.length < 5) {
