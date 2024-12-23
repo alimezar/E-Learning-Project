@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import NavBar from '../components/NavBar';
 import { io, Socket } from 'socket.io-client';
 
@@ -27,6 +27,7 @@ interface Message {
 const Forum = () => {
   const searchParams = useSearchParams();
   const courseId = searchParams.get('courseId'); // Dynamically retrieve courseId from URL query params
+  const router = useRouter();
 
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -167,10 +168,17 @@ const Forum = () => {
     setNewMessage('');
   };
 
+  const handlePrivateGroupChat = () => {
+    const groupId = prompt('Enter Private Group Chat Name or ID:');
+    if (groupId && groupId.trim()) {
+      router.push(`/chat/${groupId.trim()}`);
+    }
+  };
+
   const filteredThreads = threads.filter((thread) =>
     thread.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
+
   const styles = {
     container: {
       fontFamily: 'Arial, sans-serif',
@@ -203,16 +211,6 @@ const Forum = () => {
       fontSize: '1em',
       boxSizing: 'border-box' as 'border-box',
     },
-    textarea: {
-      width: '100%',
-      padding: '12px',
-      marginBottom: '10px',
-      border: '1px solid #ccc',
-      borderRadius: '5px',
-      fontSize: '1em',
-      boxSizing: 'border-box' as 'border-box',
-      height: '150px',
-    },
     button: {
       backgroundColor: '#4CAF50',
       color: 'white',
@@ -220,6 +218,17 @@ const Forum = () => {
       border: 'none',
       borderRadius: '5px',
       cursor: 'pointer',
+      fontSize: '1.1em',
+      textTransform: 'uppercase' as 'uppercase',
+    },
+    privateChatButton: {
+      backgroundColor: '#007bff',
+      color: 'white',
+      padding: '10px 20px',
+      border: 'none',
+      borderRadius: '5px',
+      cursor: 'pointer',
+      marginTop: '20px',
       fontSize: '1.1em',
       textTransform: 'uppercase' as 'uppercase',
     },
@@ -256,6 +265,8 @@ const Forum = () => {
       height: '300px',
       overflowY: 'scroll' as 'scroll',
       marginBottom: '10px',
+      backgroundColor: '#fff',
+      borderRadius: '8px',
     },
     chatInput: {
       width: 'calc(100% - 100px)',
@@ -264,21 +275,14 @@ const Forum = () => {
       borderRadius: '5px',
       marginRight: '10px',
     },
-    sendButton: {
-      padding: '10px 20px',
-      backgroundColor: '#4CAF50',
-      color: 'white',
-      border: 'none',
-      borderRadius: '5px',
-      cursor: 'pointer',
-    },
   };
+  
 
   return (
     <div style={styles.container}>
       <NavBar />
       <h1 style={styles.header}>Forum</h1>
-  
+
       {/* Search Bar */}
       <div style={styles.formContainer}>
         <h2>Search Threads</h2>
@@ -290,7 +294,7 @@ const Forum = () => {
           style={styles.input}
         />
       </div>
-  
+
       {/* Threads */}
       {loading && <p>Loading threads...</p>}
       {error && <p>{error}</p>}
@@ -307,7 +311,7 @@ const Forum = () => {
           placeholder="Thread Content"
           value={newThread.content}
           onChange={(e) => setNewThread({ ...newThread, content: e.target.value })}
-          style={styles.textarea}
+          style={styles.input}
         />
         <button onClick={handleCreateThread} style={styles.button}>
           Create Thread
@@ -329,10 +333,10 @@ const Forum = () => {
           <p>No threads found matching your search.</p>
         )}
       </ul>
-  
+
       {/* Study Group Chat */}
       <div style={styles.chatContainer}>
-        <h2>Study Group Chat</h2>
+        <h2>General Study Group Chat</h2>
         <div style={styles.chatBox}>
           <ul>
             {messages.map((msg, index) => (
@@ -350,13 +354,18 @@ const Forum = () => {
             placeholder="Type a message..."
             style={styles.chatInput}
           />
-          <button onClick={handleSendMessage} style={styles.sendButton}>
+          <button onClick={handleSendMessage} style={styles.button}>
             Send
           </button>
         </div>
       </div>
+
+      {/* Private Group Chat Button */}
+      <button style={styles.privateChatButton} onClick={handlePrivateGroupChat}>
+        Private Group Chat
+      </button>
     </div>
   );
-};  
+};
 
 export default Forum;

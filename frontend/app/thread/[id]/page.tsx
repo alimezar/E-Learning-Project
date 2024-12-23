@@ -11,6 +11,7 @@ const ThreadPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [newReply, setNewReply] = useState<string>('');
+  const [user, setUser] = useState<any>(null); // To store user info
 
   // Fetch thread data
   const fetchThread = async () => {
@@ -22,6 +23,7 @@ const ThreadPage = () => {
         throw new Error('Failed to fetch thread');
       }
       const data = await res.json();
+      console.log('Fetched thread data:', data); // Debugging log
       setThread(data);
       setLoading(false);
     } catch (error) {
@@ -31,6 +33,134 @@ const ThreadPage = () => {
     }
   };
 
+  const fetchUserData = () => {
+    const cookies = document.cookie;
+    const userCookie = cookies.split('; ').find((cookie) => cookie.startsWith('user='));
+
+    if (userCookie) {
+      try {
+        const userData = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
+        console.log('Parsed user data:', userData); // Debugging log
+        if (userData.id && userData.name && userData.role) {
+          setUser(userData);
+        } else {
+          console.error('Incomplete user data in cookie:', userData);
+        }
+      } catch (error) {
+        console.error('Failed to parse user cookie:', error);
+      }
+    } else {
+      console.error('User cookie not found');
+    }
+  };
+
+  const handleEditThread = async () => {
+    if (!user) return alert('You must be logged in.');
+
+    const updatedTitle = prompt('Enter new title:', thread.title);
+    const updatedContent = prompt('Enter new content:', thread.content);
+
+    if (!updatedTitle || !updatedContent) return alert('Title and content cannot be empty.');
+
+    try {
+      const res = await fetch(`http://localhost:3001/threads/${thread._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: updatedTitle,
+          content: updatedContent,
+          userId: user.id,
+          role: user.role,
+        }),
+      });
+
+      if (res.ok) {
+        fetchThread(); // Refresh thread details
+        alert('Thread updated successfully.');
+      } else {
+        alert('Failed to edit thread.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred.');
+    }
+  };
+
+  const handleDeleteThread = async () => {
+    if (!user) return alert('You must be logged in.');
+
+    const confirmDelete = confirm('Are you sure you want to delete this thread?');
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`http://localhost:3001/threads/${thread._id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, role: user.role }),
+      });
+
+      if (res.ok) {
+        alert('Thread deleted successfully.');
+        window.location.href = '/'; // Redirect to another page after deletion
+      } else {
+        alert('Failed to delete thread.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred.');
+    }
+  };
+
+  const handleEditReply = async (replyId: string, currentContent: string) => {
+    if (!user) return alert('You must be logged in.');
+  
+    const updatedContent = prompt('Enter new content for your reply:', currentContent);
+    if (!updatedContent) return alert('Content cannot be empty.');
+  
+    try {
+      const res = await fetch(`http://localhost:3001/replies/${replyId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: updatedContent, userId: user.id, role: user.role }),
+      });
+  
+      if (res.ok) {
+        fetchReplies(); // Refresh replies
+        alert('Reply updated successfully.');
+      } else {
+        alert('Failed to update reply.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred while updating the reply.');
+    }
+  };
+  
+  const handleDeleteReply = async (replyId: string) => {
+    if (!user) return alert('You must be logged in.');
+  
+    const confirmDelete = confirm('Are you sure you want to delete this reply?');
+    if (!confirmDelete) return;
+  
+    try {
+      const res = await fetch(`http://localhost:3001/replies/${replyId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, role: user.role }),
+      });
+  
+      if (res.ok) {
+        fetchReplies(); // Refresh replies
+        alert('Reply deleted successfully.');
+      } else {
+        alert('Failed to delete reply.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred while deleting the reply.');
+    }
+  };
+    
   // Fetch replies for the thread
   const fetchReplies = async () => {
     if (!id) return;
@@ -49,14 +179,10 @@ const ThreadPage = () => {
 
   // Post a new reply
   const postReply = async () => {
-    const cookies = document.cookie;
-    const userCookie = cookies.split('; ').find((cookie) => cookie.startsWith('user='));
-    if (!userCookie) {
+    if (!user) {
       alert('You must be logged in to post a reply.');
       return;
     }
-
-    const user = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
     try {
       const res = await fetch(`http://localhost:3001/replies/${id}`, {
         method: 'POST',
@@ -84,6 +210,7 @@ const ThreadPage = () => {
   useEffect(() => {
     fetchThread();
     fetchReplies();
+    fetchUserData();
   }, [id]);
 
   const styles = {
@@ -125,22 +252,6 @@ const ThreadPage = () => {
       color: '#777',
       marginTop: '10px',
     },
-    formContainer: {
-      marginTop: '20px',
-      padding: '20px',
-      backgroundColor: '#fff',
-      borderRadius: '8px',
-      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    },
-    input: {
-      width: '100%',
-      padding: '12px',
-      marginBottom: '10px',
-      border: '1px solid #ccc',
-      borderRadius: '5px',
-      fontSize: '1em',
-      boxSizing: 'border-box' as 'border-box',
-    },
     button: {
       backgroundColor: '#4CAF50',
       color: 'white',
@@ -150,27 +261,10 @@ const ThreadPage = () => {
       cursor: 'pointer',
       fontSize: '1.1em',
       textTransform: 'uppercase' as 'uppercase',
+      marginRight: '10px',
     },
-    replyList: {
-      listStyleType: 'none',
-      paddingLeft: '0',
-      marginTop: '20px',
-    },
-    replyItem: {
-      backgroundColor: '#fff',
-      borderRadius: '8px',
-      padding: '15px',
-      marginBottom: '15px',
-      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
-    },
-    replyContent: {
-      fontSize: '1em',
-      color: '#555',
-      marginBottom: '10px',
-    },
-    replyMeta: {
-      fontSize: '0.9em',
-      color: '#777',
+    deleteButton: {
+      backgroundColor: '#FF0000',
     },
   };
 
@@ -181,7 +275,7 @@ const ThreadPage = () => {
 
   return (
     <div style={styles.container}>
-      <NavBar/>
+      <NavBar />
       <h1 style={styles.header}>Thread Details</h1>
 
       <div style={styles.threadCard}>
@@ -195,39 +289,59 @@ const ThreadPage = () => {
             <strong>Author:</strong> {thread.userName}
           </p>
         </div>
+        {user &&
+          (user.role === 'admin' ||
+            user.role === 'instructor' ||
+            user.name === thread.userName) && ( // Check by name for ownership
+            <div>
+              <button onClick={handleEditThread} style={styles.button}>
+                Edit
+              </button>
+              <button
+                onClick={handleDeleteThread}
+                style={{ ...styles.button, ...styles.deleteButton }}
+              >
+                Delete
+              </button>
+            </div>
+          )}
       </div>
 
       {/* Replies */}
       <h2 style={styles.header}>Replies</h2>
-      <ul style={styles.replyList}>
-        {replies.length > 0 ? (
-          replies.map((reply) => (
-            <li key={reply._id} style={styles.replyItem}>
-              <p style={styles.replyContent}>{reply.content}</p>
-              <p style={styles.replyMeta}>
-                <strong>By:</strong> {reply.userName} <strong>At:</strong>{' '}
-                {new Date(reply.createdAt).toLocaleString()}
-              </p>
-            </li>
-          ))
-        ) : (
-          <p>No replies yet.</p>
-        )}
-      </ul>
+      <ul>
+  {replies.map((reply) => (
+    <li key={reply._id}>
+      <p>
+        <strong>{reply.userName}:</strong> {reply.content}
+      </p>
+      {user && (user.role === 'admin' ||user.role === 'instructor' || user.name === reply.userName) && (
+        <div>
+          <button
+            onClick={() => handleEditReply(reply._id, reply.content)}
+            style={styles.button}
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDeleteReply(reply._id)}
+            style={{ ...styles.button, ...styles.deleteButton }}
+          >
+            Delete
+          </button>
+        </div>
+      )}
+    </li>
+  ))}
+</ul>
 
       {/* Add Reply Form */}
-      <div style={styles.formContainer}>
-        <h2>Post a Reply</h2>
-        <textarea
-          placeholder="Write your reply..."
-          value={newReply}
-          onChange={(e) => setNewReply(e.target.value)}
-          style={styles.input}
-        />
-        <button onClick={postReply} style={styles.button}>
-          Submit Reply
-        </button>
-      </div>
+      <textarea
+        placeholder="Write your reply..."
+        value={newReply}
+        onChange={(e) => setNewReply(e.target.value)}
+      />
+      <button onClick={postReply}>Submit Reply</button>
     </div>
   );
 };
