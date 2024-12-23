@@ -11,9 +11,6 @@ export class Notes {
   @Prop({ type: Types.ObjectId, ref: 'Users', required: true })
   user_id: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Course', required: true })
-  course_id: Types.ObjectId;
-
   @Prop({ type: Types.ObjectId, ref: 'Module', required: true })
   module_id: Types.ObjectId;
 

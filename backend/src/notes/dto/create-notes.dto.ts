@@ -1,21 +1,7 @@
-import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
-export class CreateNoteDto {
-  @IsMongoId()
-  @IsNotEmpty()
-  user_id: string;
-
-  @IsMongoId()
-  @IsNotEmpty()
-  course_id: string;
-
+export class CreateNotesDto {
   @IsString()
   @IsNotEmpty()
-  content: string;
-
-  @IsOptional()
-  created_at?: Date;
-
-  @IsOptional()
-  last_updated?: Date;
+  content: string;  // Only `content` is required to create a note
 }
