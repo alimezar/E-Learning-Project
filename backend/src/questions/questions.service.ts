@@ -1,16 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Questions, QuestionDocument } from './questions.schema';
+import { Users } from '../users/users.schema';
+
 
 @Injectable()
 export class QuestionsService {
   constructor(
     @InjectModel('Questions') private readonly questionModel: Model<QuestionDocument>,
+    @InjectModel('Users') private readonly userModel: Model<Users> // Inject Users model
   ) {}
 
   // Create a new question
   async createQuestion(questionData: Partial<Questions>): Promise<Questions> {
+    const user = await this.userModel.findById(questionData.userId)
+        if(user.role != "instructor"){
+          throw new BadRequestException("Only an instructor can create a question")
+        }
+        
     const newQuestion = new this.questionModel(questionData);
     return newQuestion.save();
   }

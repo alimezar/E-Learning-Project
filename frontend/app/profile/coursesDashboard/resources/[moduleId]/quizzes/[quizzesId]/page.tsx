@@ -1,119 +1,264 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { CSSProperties, useState, useEffect } from "react";
 
-export default function QuizDetails() {
-  const params = useParams();
-  const moduleId = params?.moduleId;
-  const quizzesId = params?.quizzesId;
+const styles: { [key: string]: CSSProperties } = {
+  container: {
+    padding: "2rem",
+    fontFamily: "Arial, sans-serif",
+    position: "relative",
+    background: "linear-gradient(135deg, rgba(44, 41, 93, 0.8), rgba(30, 77, 77, 0.8)), url('/path-to-your-image.jpg')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundAttachment: "fixed",
+    animation: "gradientAnimation 10s ease infinite",
+    color: "#ffffff",
+    minHeight: "100vh",
+  },
+  header: {
+    fontSize: "2rem",
+    fontWeight: "bold",
+    marginBottom: "1rem",
+    textAlign: "center",
+    fontFamily: "Trebuchet MS, Arial, sans-serif",
+    color: "#ffc857",
+  },
+  questionContainer: {
+    marginBottom: "2rem",
+    padding: "1rem",
+    border: "1px solid #4c4a7f",
+    borderRadius: "8px",
+    backgroundColor: "#3e3966",
+    maxWidth: "600px",
+    margin: "0 auto",
+  },
+  question: {
+    fontSize: "1.5rem",
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: "1rem",
+    color: "#ffc857",
+  },
+  counter: {
+    position: "fixed",
+    top: "2rem",
+    right: "2rem",
+    padding: "1rem",
+    backgroundColor: "#1e4d4d",
+    border: "1px solid #4c4a7f",
+    borderRadius: "8px",
+    fontSize: "1.2rem",
+    fontWeight: "bold",
+    fontFamily: "Trebuchet MS, Arial, sans-serif",
+    color: "#ffc857",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.2)",
+  },
+  optionLabel: {
+    display: "block",
+    padding: "0.5rem",
+    margin: "0.5rem 0",
+    borderRadius: "4px",
+    backgroundColor: "#514d83",
+    color: "#ffffff",
+    cursor: "pointer",
+    transition: "background-color 0.3s ease",
+  },
+  optionLabelHover: {
+    backgroundColor: "#1e4d4d",
+  },
+  optionLabelSelected: {
+    backgroundColor: "#ffc857",
+    color: "#2c295d",
+  },
+  submitButton: {
+    display: "block",
+    marginTop: "2rem",
+    padding: "1rem 2rem",
+    backgroundColor: "#ffc857",
+    border: "none",
+    borderRadius: "8px",
+    color: "#2c295d",
+    fontSize: "1.2rem",
+    fontWeight: "bold",
+    cursor: "pointer",
+    transition: "background-color 0.3s ease",
+    width: "100%",
+    maxWidth: "300px",
+    marginLeft: "auto",
+    marginRight: "auto",
+  },
+  submitButtonHover: {
+    backgroundColor: "#1e4d4d",
+  },
+};
 
-  const [quiz, setQuiz] = useState({
-    title: '',
-    questions: [] as { question: string; options: string[]; correctAnswer: string }[],
-  });
-  const [error, setError] = useState<string | null>(null);
+type Question = {
+  _id: string;
+  question: string;
+  options: string[];
+  choice?: string;
+  moduleId: string;
+  difficulty: string;
+  answer: string;
+  __v: number;
+};
+
+export default function QuizPage({ params }: { params: Promise<{ quizzesId: string }> }) {
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [quizId, setQuizId] = useState<string | null>(null);
+  const [moduleTitle, setModuleTitle] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchQuizDetails = async () => {
+    async function fetchParams() {
+      const resolvedParams = await params;
+      setQuizId(resolvedParams.quizzesId); // Updated to use quizzesId
+    }
+
+    fetchParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (!quizId) return;
+
+    async function fetchQuiz() {
       try {
-        if (!moduleId || !quizzesId) throw new Error('Module ID or Quiz ID is missing.');
-
-        const response = await fetch(`http://localhost:3001/modules/${moduleId}/quizzes/${quizzesId}`);
-        if (!response.ok) throw new Error('Failed to fetch quiz details.');
-
-        const data = await response.json();
-        setQuiz(data);
-      } catch (err: any) {
-        setError(err.message);
+        setError("");
+        const res = await fetch(`http://localhost:3001/quizzes/${quizId}`);
+        if (!res.ok) throw new Error("Failed to fetch quiz data");
+        const quizData = await res.json();
+        setModuleTitle(quizData.moduleId.title);
+        setQuestions(quizData.questions);
+      } catch (err) {
+        setError("Could not load the quiz. Please try again later.");
+        console.error(err);
       }
-    };
+    }
 
-    fetchQuizDetails();
-  }, [moduleId, quizzesId]);
+    fetchQuiz();
+  }, [quizId]);
+
+  const handleOptionSelect = (questionId: string, selectedOption: string) => {
+    setQuestions((prevQuestions) =>
+      prevQuestions.map((q) =>
+        q._id === questionId ? { ...q, choice: selectedOption } : q
+      )
+    );
+  };
+
+  const handleSubmit = async () => {
+    if (!quizId) {
+      setError("Quiz ID is missing. Cannot submit the quiz.");
+      return;
+    }
+
+    try {
+      const quizResponse = await fetch(`http://localhost:3001/quizzes/${quizId}`);
+      if (!quizResponse.ok) {
+        throw new Error("Failed to fetch quiz details.");
+      }
+
+      const quizData = await quizResponse.json();
+      const updatedQuiz = {
+        questions: questions.map(({ _id, question, options, choice, answer, difficulty, moduleId }) => ({
+          _id,
+          question,
+          options,
+          choice,
+          answer,
+          difficulty,
+          moduleId,
+        })),
+      };
+
+      const updateQuizResponse = await fetch(`http://localhost:3001/quizzes/${quizId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedQuiz),
+      });
+
+      if (!updateQuizResponse.ok) {
+        const errorText = await updateQuizResponse.text();
+        console.error("API Error Response:", errorText);
+        throw new Error("Failed to update quiz choices.");
+      }
+
+      const userId = quizData.userId;
+
+      if (!userId) {
+        setError("User ID is missing from the quiz details.");
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3001/responses`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ quizId, userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit the quiz. Please try again.");
+      }
+
+      const responseData = await response.json();
+      const responseId = responseData._id;
+      window.location.href = `/responses/${responseId}?userId=${userId}&quizId=${quizId}`;
+    } catch (err) {
+      console.error("Error submitting the quiz:", err);
+      setError("An error occurred while submitting the quiz. Please try again.");
+    }
+  };
+
+  const answeredCount = questions.filter((q) => q.choice && q.options.includes(q.choice)).length;
 
   if (error) {
-    return <p style={{ color: 'red', textAlign: 'center' }}>Error: {error}</p>;
+    return <div style={styles.container}>{error}</div>;
   }
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Quiz: {quiz.title}</h1>
-      <ul style={styles.questionList}>
-        {quiz.questions.map((question, index) => (
-          <li key={index} style={styles.questionItem}>
-            <h2 style={styles.questionTitle}>Q{index + 1}: {question.question}</h2>
-            <ul style={styles.optionsList}>
-              {question.options.map((option, optIndex) => (
-                <li key={optIndex} style={styles.optionItem}>
-                  <input
-                    type="radio"
-                    id={`q${index}-opt${optIndex}`}
-                    name={`q${index}`}
-                    value={option}
-                    style={styles.radioButton}
-                  />
-                  <label htmlFor={`q${index}-opt${optIndex}`} style={styles.optionLabel}>
-                    {option}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+      <h1 style={styles.header}>
+        {moduleTitle ? `${moduleTitle} Quiz` : "Quiz"}
+      </h1>
+      {questions.map((q) => (
+        <div key={q._id} style={styles.questionContainer}>
+          <h2 style={styles.question}>{q.question}</h2>
+          {q.options.map((option) => (
+            <label
+              key={option}
+              style={{
+                ...styles.optionLabel,
+                ...(q.choice === option ? styles.optionLabelSelected : {}),
+              }}
+            >
+              <input
+                type="radio"
+                name={q._id}
+                value={option}
+                checked={q.choice === option}
+                onChange={() => handleOptionSelect(q._id, option)}
+                style={{ display: "none" }}
+              />
+              {option}
+            </label>
+          ))}
+        </div>
+      ))}
+      <div style={styles.counter}>
+        Questions Answered: {answeredCount} / {questions.length}
+      </div>
+      <button
+        style={styles.submitButton}
+        onClick={handleSubmit}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1e4d4d")}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffc857")}
+      >
+        Submit Quiz
+      </button>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    maxWidth: '800px',
-    margin: '0 auto',
-    padding: '2rem',
-    fontFamily: 'Arial, sans-serif',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    borderRadius: '10px',
-    backgroundColor: '#f9f9f9',
-  },
-  title: {
-    fontSize: '2.5rem',
-    marginBottom: '1.5rem',
-    fontWeight: 'bold',
-    textAlign: 'center' as const,
-    color: '#333',
-  },
-  questionList: {
-    listStyleType: 'none',
-    padding: 0,
-    marginBottom: '2rem',
-  },
-  questionItem: {
-    marginBottom: '2rem',
-    padding: '1rem',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    backgroundColor: '#fff',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-  },
-  questionTitle: {
-    fontSize: '1.5rem',
-    marginBottom: '1rem',
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  optionsList: {
-    listStyleType: 'none',
-    padding: 0,
-  },
-  optionItem: {
-    marginBottom: '0.5rem',
-  },
-  radioButton: {
-    marginRight: '0.5rem',
-  },
-  optionLabel: {
-    fontSize: '1rem',
-    color: '#555',
-  },
-};
