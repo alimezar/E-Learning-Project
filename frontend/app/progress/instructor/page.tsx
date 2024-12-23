@@ -14,21 +14,45 @@ interface StudentProgress {
   progress: number; // progress as percentage
 }
 
-const InstructorProgressPage = () => {
+export default function InstructorProgressPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [studentProgress, setStudentProgress] = useState<StudentProgress[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  const instructorId = "YOUR_INSTRUCTOR_ID"; // Replace this with dynamic logic to fetch the instructor ID from the user's session or cookies.
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch courses taught by the instructor
+    // Check if the user is authenticated
+    const cookies = document.cookie.split('; ');
+    const userCookie = cookies.find((cookie) => cookie.startsWith('user='));
+
+    if (!userCookie) {
+      setError('User is not authenticated. Please log in.');
+      return;
+    }
+
+    try {
+      const userData = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
+      if (userData.role !== 'instructor') {
+        setError('Access restricted to instructors only.');
+        return;
+      }
+
+      setUserId(userData.id);
+    } catch (err) {
+      console.error('Failed to parse user cookie:', err);
+      setError('An error occurred while validating user authentication.');
+    }
+  }, []);
+
+  useEffect(() => {
+    // Fetch all courses
     async function fetchCourses() {
       try {
-        const response = await fetch(`http://localhost:3001/courses/taught?instructorId=${instructorId}`, {
+        const response = await fetch('http://localhost:3001/courses', {
           credentials: 'include',
         });
+
         const data = await response.json();
 
         if (response.ok) {
@@ -43,29 +67,65 @@ const InstructorProgressPage = () => {
     }
 
     fetchCourses();
-  }, [instructorId]);
+  }, []);
 
   useEffect(() => {
-    // Fetch student progress for the selected course
-    if (!selectedCourseId) return;
-
+    // Fetch all progress and filter by selected course, then fetch user names
     async function fetchStudentProgress() {
+      if (!selectedCourseId) return;
+
       try {
-        const response = await fetch(
-          `http://localhost:3001/courses/${selectedCourseId}/students`,
-          { credentials: 'include' }
-        );
+        const response = await fetch(`http://localhost:3001/progress/all`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch student progress.');
+        }
+
         const data = await response.json();
 
-        if (response.ok) {
-          setStudentProgress(data.map((student: any) => ({
-            studentId: student._id,
-            studentName: student.name,
-            progress: Math.floor(Math.random() * 101), // Replace this with actual progress when available
-          })));
-        } else {
-          setError(data.message || 'Failed to fetch student progress.');
-        }
+        // Filter progress for the selected course
+        const filteredProgress = data.filter(
+          (progress: any) => progress.courseId === selectedCourseId
+        );
+
+        // Fetch user names for each student
+        const progressWithNames = await Promise.all(
+          filteredProgress.map(async (progress: any) => {
+            try {
+              const userResponse = await fetch(
+                `http://localhost:3001/users/${progress.userId}`,
+                {
+                  method: 'GET',
+                  credentials: 'include',
+                }
+              );
+
+              if (!userResponse.ok) {
+                throw new Error('Failed to fetch user data.');
+              }
+
+              const userData = await userResponse.json();
+
+              return {
+                studentId: progress.userId,
+                studentName: userData.name || 'Unknown',
+                progress: progress.completedPercentage || 0,
+              };
+            } catch (err) {
+              console.error('Error fetching user data:', err);
+              return {
+                studentId: progress.userId,
+                studentName: 'Unknown',
+                progress: progress.completedPercentage || 0,
+              };
+            }
+          })
+        );
+
+        setStudentProgress(progressWithNames);
       } catch (err) {
         console.error('Error fetching student progress:', err);
         setError('An error occurred while fetching student progress.');
@@ -75,11 +135,13 @@ const InstructorProgressPage = () => {
     fetchStudentProgress();
   }, [selectedCourseId]);
 
+  if (error) {
+    return <p style={{ color: 'red' }}>{error}</p>;
+  }
+
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Instructor Dashboard - Student Progress</h1>
-
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <h1>Instructor Progress Dashboard</h1>
 
       <div style={{ marginBottom: '20px' }}>
         <label htmlFor="course-select" style={{ marginRight: '10px' }}>
@@ -105,10 +167,22 @@ const InstructorProgressPage = () => {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              <th style={{ borderBottom: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>
+              <th
+                style={{
+                  borderBottom: '1px solid #ddd',
+                  padding: '8px',
+                  textAlign: 'left',
+                }}
+              >
                 Student Name
               </th>
-              <th style={{ borderBottom: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>
+              <th
+                style={{
+                  borderBottom: '1px solid #ddd',
+                  padding: '8px',
+                  textAlign: 'left',
+                }}
+              >
                 Progress (%)
               </th>
             </tr>
@@ -116,8 +190,22 @@ const InstructorProgressPage = () => {
           <tbody>
             {studentProgress.map((progress) => (
               <tr key={progress.studentId}>
-                <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{progress.studentName}</td>
-                <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{progress.progress}%</td>
+                <td
+                  style={{
+                    borderBottom: '1px solid #ddd',
+                    padding: '8px',
+                  }}
+                >
+                  {progress.studentName}
+                </td>
+                <td
+                  style={{
+                    borderBottom: '1px solid #ddd',
+                    padding: '8px',
+                  }}
+                >
+                  {progress.progress}%
+                </td>
               </tr>
             ))}
           </tbody>
@@ -129,6 +217,4 @@ const InstructorProgressPage = () => {
       )}
     </div>
   );
-};
-
-export default InstructorProgressPage;
+}
