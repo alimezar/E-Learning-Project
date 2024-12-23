@@ -13,7 +13,7 @@ import * as cron from 'node-cron';
       provide: 'BackupScheduler',
       useFactory: (backupService: BackupService) => {
         // Backup every 30 minutes
-        cron.schedule('*/1 * * * *', async () => {
+        cron.schedule('*/30 * * * *', async () => {
           console.log('Backup running...');
           try {
             await backupService.backupUsers();

@@ -65,6 +65,10 @@ export class ProgressService {
     return progress;
   }
 
+  async getAllProgress(): Promise<Progress[]> {
+    return this.progressModel.find().exec();
+  }
+
   async updateProgress(
     userId: string,
     courseId: string,

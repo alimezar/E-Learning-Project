@@ -77,7 +77,7 @@ export default function StudentDashboard() {
             <a href="/profile/settings" style={styles.dropdownLink}>
               Settings
             </a>
-            <a href="/progress" style={styles.dropdownLink}>
+            <a href="/progress/student" style={styles.dropdownLink}>
               Progress
             </a>
           </div>
