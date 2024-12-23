@@ -19,6 +19,7 @@ export default function InstructorDashboard() {
   const [taughtCourses, setTaughtCourses] = useState<Course[]>([]);
   const [teachableCourses, setTeachableCourses] = useState<Course[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Extract user details from cookie
   useEffect(() => {
@@ -63,8 +64,6 @@ export default function InstructorDashboard() {
           setError('Instructor ID not found. Please log in again.');
           return;
         }
-
-        console.log('Fetching taught courses for instructor:', instructorId);
 
         const response = await fetch(`http://localhost:3001/courses/taught?instructorId=${instructorId}`, {
           credentials: 'include',
@@ -124,8 +123,6 @@ export default function InstructorDashboard() {
         return;
       }
 
-      console.log('Assigning course with:', { courseId, instructorId });
-
       const response = await fetch(`http://localhost:3001/courses/assign/${courseId}`, {
         method: 'POST',
         credentials: 'include',
@@ -148,8 +145,29 @@ export default function InstructorDashboard() {
     }
   }
 
+  const filteredTaughtCourses = taughtCourses.filter((course) =>
+    course.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredTeachableCourses = teachableCourses.filter((course) =>
+    course.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div style={styles.container}>
+      {/* Navbar */}
+      <nav style={styles.navbar}>
+        <Link href="/profile/settings" style={styles.navLink}>
+          Settings
+        </Link>
+        <Link href="/profile/preferences" style={styles.navLink}>
+          Preferences
+        </Link>
+        <a href="/auth/login" style={styles.navLink}>
+          Logout
+        </a>
+      </nav>
+
       <div style={styles.header}>
         <h1 style={styles.title}>Instructor Dashboard</h1>
         <div style={styles.buttonGroup}>
@@ -167,13 +185,24 @@ export default function InstructorDashboard() {
 
       {error && <p style={styles.error}>{error}</p>}
 
+      {/* Search Bar */}
+      <div style={styles.searchBar}>
+        <input
+          type="text"
+          placeholder="Search courses..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={styles.searchInput}
+        />
+      </div>
+
       {role === 'instructor' && (
         <>
           <section style={styles.section}>
             <h2 style={styles.sectionTitle}>Your Taught Courses</h2>
             <div style={styles.courseGrid}>
-              {taughtCourses.length > 0 ? (
-                taughtCourses.map((course) => (
+              {filteredTaughtCourses.length > 0 ? (
+                filteredTaughtCourses.map((course) => (
                   <div key={course._id} style={styles.courseCard}>
                     <h3 style={styles.courseTitle}>{course.title}</h3>
                     <p style={styles.courseDescription}>{course.description}</p>
@@ -191,8 +220,8 @@ export default function InstructorDashboard() {
           <section style={styles.section}>
             <h2 style={styles.sectionTitle}>Teachable Courses</h2>
             <div style={styles.courseGrid}>
-              {teachableCourses.length > 0 ? (
-                teachableCourses.map((course) => (
+              {filteredTeachableCourses.length > 0 ? (
+                filteredTeachableCourses.map((course) => (
                   <div key={course._id} style={styles.courseCard}>
                     <h3 style={styles.courseTitle}>{course.title}</h3>
                     <p style={styles.courseDescription}>{course.description}</p>
@@ -214,17 +243,21 @@ export default function InstructorDashboard() {
 
 const styles = {
   container: { padding: '2rem', fontFamily: 'Arial, sans-serif' },
+  navbar: { display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginBottom: '1rem' },
+  navLink: { color: '#007bff', textDecoration: 'none', fontWeight: 'bold' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' },
-  title: { fontSize: '2rem', fontWeight: 'bold' },
+  title: { fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem', textAlign: 'center' as const },
   buttonGroup: { display: 'flex', gap: '1rem' },
-  button: { padding: '0.5rem 1rem', backgroundColor: '#4c9aff', color: '#fff', textDecoration: 'none', borderRadius: '4px', cursor: 'pointer' },
-  error: { color: 'red', marginBottom: '1rem' },
+  button: { padding: '0.5rem 1rem', backgroundColor: '#ff6f61', color: '#fff', textDecoration: 'none', borderRadius: '4px', cursor: 'pointer' },
+  error: { color: 'red', marginBottom: '1rem', textAlign: 'center' as const },
+  searchBar: { marginBottom: '2rem', textAlign: 'center' as const },
+  searchInput: { padding: '0.5rem', width: '100%', maxWidth: '400px', borderRadius: '4px', border: '1px solid #ddd' },
   section: { marginBottom: '2rem' },
-  sectionTitle: { fontSize: '1.5rem', marginBottom: '1rem' },
+  sectionTitle: { fontSize: '1.5rem', marginBottom: '1rem', textAlign: 'center' as const },
   courseGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' },
   courseCard: { backgroundColor: '#f9f9f9', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' },
   courseTitle: { fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' },
   courseDescription: { fontSize: '1rem', color: '#555', marginBottom: '1rem' },
-  courseLink: { display: 'inline-block', padding: '0.5rem 1rem', backgroundColor: '#4c9aff', color: 'white', borderRadius: '4px', textDecoration: 'none' },
-  assignButton: { padding: '0.5rem 1rem', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
+  courseLink: { display: 'inline-block', padding: '0.5rem 1rem', backgroundColor: '#4caf50', color: 'white', borderRadius: '4px', textDecoration: 'none' },
+  assignButton: { padding: '0.5rem 1rem', backgroundColor: '#4caf50', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
 };

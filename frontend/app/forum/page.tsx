@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import NavBar from '../components/NavBar';
@@ -34,7 +35,7 @@ const Forum = () => {
     title: '',
     content: '',
   });
-
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
   const [userName, setUserName] = useState<string>('');
@@ -85,8 +86,8 @@ const Forum = () => {
     const threadData = {
       title: newThread.title,
       content: newThread.content,
-      courseId, // Use dynamic courseId
-      userId: user.id, // Pass the userId from the cookie
+      courseId,
+      userId: user.id,
     };
 
     const res = await fetch('http://localhost:3001/threads', {
@@ -127,7 +128,7 @@ const Forum = () => {
           throw new Error('Failed to fetch chat messages');
         }
         const data = await res.json();
-        setMessages(data); // Populate chat messages
+        setMessages(data);
       } catch (error) {
         console.error('Error fetching chat messages:', error);
       }
@@ -136,7 +137,10 @@ const Forum = () => {
     fetchChatMessages();
 
     // Initialize WebSocket connection
-    socket = io('http://localhost:3001', { transports: ['websocket'] });
+    socket = io('http://localhost:3001', {
+      transports: ['websocket'],
+      query: { userId },
+    });
 
     socket.on(`receiveMessage:${courseId}`, (message: Message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
@@ -148,7 +152,7 @@ const Forum = () => {
         socket.disconnect();
       }
     };
-  }, [courseId]);
+  }, [courseId, userId]);
 
   const handleSendMessage = () => {
     if (!socket || !newMessage.trim() || !courseId) return;
@@ -163,6 +167,10 @@ const Forum = () => {
     setNewMessage('');
   };
 
+  const filteredThreads = threads.filter((thread) =>
+    thread.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
   const styles = {
     container: {
       fontFamily: 'Arial, sans-serif',
@@ -270,7 +278,19 @@ const Forum = () => {
     <div style={styles.container}>
       <NavBar />
       <h1 style={styles.header}>Forum</h1>
-
+  
+      {/* Search Bar */}
+      <div style={styles.formContainer}>
+        <h2>Search Threads</h2>
+        <input
+          type="text"
+          placeholder="Search by title..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={styles.input}
+        />
+      </div>
+  
       {/* Threads */}
       {loading && <p>Loading threads...</p>}
       {error && <p>{error}</p>}
@@ -294,18 +314,22 @@ const Forum = () => {
         </button>
       </div>
       <ul style={styles.threadList}>
-        {threads.map((thread) => (
-          <li key={thread._id} style={styles.threadItem}>
-            <p>
-              <strong>{thread.title}</strong> by {thread.userName}
-            </p>
-            <a href={`/thread/${thread._id}`} style={styles.link}>
-              View Thread
-            </a>
-          </li>
-        ))}
+        {filteredThreads.length > 0 ? (
+          filteredThreads.map((thread) => (
+            <li key={thread._id} style={styles.threadItem}>
+              <p>
+                <strong>{thread.title}</strong> by {thread.userName}
+              </p>
+              <a href={`/thread/${thread._id}`} style={styles.link}>
+                View Thread
+              </a>
+            </li>
+          ))
+        ) : (
+          <p>No threads found matching your search.</p>
+        )}
       </ul>
-
+  
       {/* Study Group Chat */}
       <div style={styles.chatContainer}>
         <h2>Study Group Chat</h2>
@@ -333,6 +357,6 @@ const Forum = () => {
       </div>
     </div>
   );
-};
+};  
 
 export default Forum;

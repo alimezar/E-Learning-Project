@@ -222,6 +222,25 @@ async getCourseModules(courseId: string): Promise<any[]> {
   
   
   
+  async getModulesByCourse(courseId: string): Promise<Module[]> {
+    // Find the course by ID and populate the 'modules' field
+    const course = await this.courseModel
+      .findById(courseId)
+      .populate({
+        path: 'modules', // Populate the 'modules' field
+        model: 'Module', // Reference the 'Module' schema
+      })
+      .exec();
+  
+    if (!course) {
+      throw new NotFoundException('Course not found.');
+    }
+  
+    // Explicitly cast the populated modules to Module[]
+    return course.modules as unknown as Module[];
+  }
+  
+  
   
   
 async getCourseModulesWithDetails(courseId: string): Promise<{ courseId: string; modules: Module[] }> {

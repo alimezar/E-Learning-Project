@@ -10,13 +10,20 @@ export class ChatMessage extends Document {
   senderName: string;
 
   @Prop({ required: false })
-  courseId?: string; // Include courseId to filter messages by course
+  courseId?: string; // Include courseId for group chat messages
+
+  @Prop({ required: false })
+  receiverId?: string; // Add receiverId for 1-on-1 messages
 
   @Prop({ required: true })
   message: string;
 
   @Prop({ default: Date.now })
   timestamp: Date;
+
+  @Prop({ required: false })
+link?: string; // Optional link field for redirection
+
 }
 
 export const ChatMessageSchema = SchemaFactory.createForClass(ChatMessage);

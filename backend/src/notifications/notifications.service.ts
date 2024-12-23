@@ -9,19 +9,23 @@ export class NotificationService {
     @InjectModel('Notification') private notificationModel: Model<Notification>,
   ) {}
 
-  async createNotification(userId: string, message: string) {
+  // Create a new notification with an optional link
+  async createNotification(userId: string, message: string, link?: string) {
     const notification = new this.notificationModel({
       userId,
       message,
+      link, // Include link in the notification
       read: false,
     });
     return notification.save();
   }
 
+  // Fetch notifications for a specific user
   async getNotificationsForUser(userId: string) {
-    return this.notificationModel.find({ userId }).exec();
+    return this.notificationModel.find({ userId }).sort({ createdAt: -1 }).exec(); // Sort by newest first
   }
 
+  // Mark a specific notification as read
   async markNotificationAsRead(notificationId: string) {
     return this.notificationModel.findByIdAndUpdate(
       notificationId,

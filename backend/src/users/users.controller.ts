@@ -1,8 +1,9 @@
-import { Controller, Post, Get, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Put, Delete, BadRequestException, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-users.dto';
 import { Users } from './users.schema'; 
 import { Course } from 'src/courses/courses.schema';
+
 
 @Controller('users')
 export class UsersController {
@@ -13,9 +14,17 @@ export class UsersController {
     return this.usersService.createUser(createUserDto);
   }
 
+  @Delete('self')
+  async deleteSelf(@Body('userId') userId: string): Promise<{ message: string }> {
+    if (!userId) {
+      throw new BadRequestException('User ID is missing.');
+    }
 
+    await this.usersService.deleteUser(userId);
+    return { message: 'User account deleted successfully.' };
+  }
   // Get all users
-  @Get()
+  @Get('all')
   async getAllUsers(): Promise<Users[]> {
     return this.usersService.getUsers();
   }

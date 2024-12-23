@@ -19,4 +19,10 @@ export class ThreadController {
   getThreadById(@Param('id') id: string) {
     return this.threadService.getThreadById(id);
   }
+
+  @Get('search/:title')
+searchThreadsByTitle(@Param('title') title: string) {
+  return this.threadService.searchThreadsByTitle(title);
+}
+
 }

@@ -57,6 +57,12 @@ export default function InstructorCourseDashboard() {
         >
           View Students
         </button>
+        <button
+          style={styles.button}
+          onClick={() => router.push(`/forum?courseId=${courseId}`)}
+        >
+          Go to Forum
+        </button>
       </div>
     </div>
   );
@@ -66,6 +72,20 @@ const styles = {
   container: { maxWidth: 800, margin: '0 auto', padding: '2rem', fontFamily: 'Arial, sans-serif' },
   title: { fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' },
   error: { color: 'red', marginBottom: '1rem' },
-  buttonGroup: { display: 'flex', gap: '1rem', marginTop: '2rem' },
-  button: { padding: '1rem 2rem', backgroundColor: '#4caf50', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
+  buttonGroup: {
+    display: 'flex' as const, // Explicitly set as 'flex'
+    gap: '1rem',
+    marginTop: '2rem',
+    flexWrap: 'wrap' as const, // Correctly typed value
+  },
+  button: {
+    padding: '1rem 2rem',
+    backgroundColor: '#4caf50',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    flex: '1 1 30%' as const, // Flex value explicitly set
+    textAlign: 'center' as const, // Correctly typed value
+  },
 };
