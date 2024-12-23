@@ -79,4 +79,12 @@ export class ThreadService {
       .populate('userId', 'name')  // Populate the user's name from the Users collection
       .exec();
   }
+
+  async searchThreadsByTitle(title: string) {
+    return this.threadModel
+      .find({ title: { $regex: title, $options: 'i' } }) // Case-insensitive regex search
+      .populate('userId', 'name') // Populate user details
+      .exec();
+  }
+  
 }
