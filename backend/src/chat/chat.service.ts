@@ -34,27 +34,16 @@ export class ChatService {
   }
 
   // Fetch messages by courseId, userId, or receiverId
-  async getMessagesByContext(userId: string, receiverId?: string, courseId?: string) {
-    let filter = {};
-  
-    if (courseId) {
-      filter = { courseId }; // Course-based messages
-    } else if (receiverId) {
-      filter = {
-        $or: [
-          { senderId: userId, receiverId }, // Messages sent by user to receiver
-          { senderId: receiverId, receiverId: userId }, // Messages sent by receiver to user
-        ],
-      };
-    } else {
-      filter = {
-        $or: [
-          { senderId: userId }, // Messages sent by the user
-          { receiverId: userId }, // Messages received by the user
-        ],
-      };
-    }
-  
-    return this.chatMessageModel.find(filter).sort({ timestamp: 1 }).exec(); // Sorted by timestamp ascending
+async getMessagesByContext(courseId: string) {
+  if (!courseId) {
+    throw new Error('Course ID is required to fetch messages.');
   }
+
+  console.log('Fetching messages for courseId:', courseId);
+
+  const filter = { courseId }; // Fetch messages only by courseId
+  console.log('Query filter:', filter);
+
+  return this.chatMessageModel.find(filter).sort({ timestamp: 1 }).exec(); // Sorted by timestamp ascending
+}
       }

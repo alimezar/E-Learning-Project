@@ -53,7 +53,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('Saving message with data:', messageData);
 
     const savedMessage = await this.chatService.saveMessage(messageData);
-    this.server.emit(`receiveMessage:${data.receiverId || data.courseId}`, savedMessage);
+    this.server.emit(`receiveMessage:${data.courseId || data.receiverId  }`, savedMessage);
   }
 
   @SubscribeMessage('fetchMessages')
@@ -63,9 +63,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('Fetching messages for:', data);
 
     const messages = await this.chatService.getMessagesByContext(
-      data.userId,
-      data.courseId,
-      data.receiverId,
+      data.courseId
     );
     const channel = data.courseId
       ? `userMessages:${data.courseId}`
