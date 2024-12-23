@@ -108,7 +108,7 @@ export class ProgressService {
       throw new NotFoundException(`Progress for user ${userId} in course ${courseId} not found.`);
     }
 
-    const totalModules = 10; 
+    const totalModules = 10;
     const completedPercentage = (progress.completedCourses.length / totalModules) * 100;
 
     return this.progressModel
@@ -121,4 +121,41 @@ export class ProgressService {
       .populate('courseId')
       .exec();
   }
+
+  //=============================================== INSTRUCTOR PROGRESS ===============================================
+  async getStudentProgressByCourse(courseId: string) {
+    // First, find the course
+    const course = await this.courseModel.findById(courseId).exec();
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+  
+    // Find the student who is enrolled in the course
+    const student = await this.userModel
+      .findOne({ role: 'student', enrolledCourses: courseId })
+      .exec();
+    if (!student) {
+      throw new NotFoundException('Student for this course not found');
+    }
+  
+    // Now, find the progress for the student in this course
+    const progress = await this.progressModel
+      .findOne({ userId: student._id, courseId })
+      .exec();
+    if (!progress) {
+      throw new NotFoundException('Progress not found for this student in the course');
+    }
+  
+    // Return student progress details
+    return {
+      studentId: student._id,
+      studentName: student.name,
+      courseName: course.title,
+      completedModules: progress.completedCourses,
+      progressPercentage: progress.completedPercentage,
+      lastAccessed: progress.last_accessed,
+      averageScore: progress.averageScore,
+    };
+  }
+  
 }

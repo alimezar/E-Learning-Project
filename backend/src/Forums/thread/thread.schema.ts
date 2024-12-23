@@ -1,19 +1,32 @@
-import { Schema, Document } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+import { Users } from '../../users/users.schema';
+import { Course } from '../../courses/courses.schema';
 
-export interface Thread extends Document {
+export type ThreadDocument = Thread & Document;
+
+@Schema({ timestamps: true })
+export class Thread {
+  @Prop({ required: true }) // Title of the thread
   title: string;
+
+  @Prop({ required: true }) // Content of the thread
   content: string;
-  courseId: string; // Refers to the course this thread belongs to
-  userId: string; // The user who created the thread
+
+  @Prop({ type: Types.ObjectId, ref: 'Course', required: true }) // Reference to Course schema
+  courseId: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Users', required: true }) // Reference to Users schema
+  userId: Types.ObjectId;
+
+  @Prop({ required: true })  // Store the username along with the thread
+  userName: string;
+  
+  @Prop({ default: () => new Date() }) // Automatically set creation date
   createdAt: Date;
+
+  @Prop({ default: () => new Date() }) // Automatically set update date
   updatedAt: Date;
 }
 
-export const ThreadSchema = new Schema<Thread>({
-  title: { type: String, required: true },
-  content: { type: String, required: true },
-  courseId: { type: String, required: true },
-  userId: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+export const ThreadSchema = SchemaFactory.createForClass(Thread);

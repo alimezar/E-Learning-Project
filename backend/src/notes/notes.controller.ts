@@ -1,36 +1,65 @@
-import { Controller, Post, Get, Body, Param, Delete, NotFoundException } from '@nestjs/common';
-import { NotesService } from './notes.service';
-import { CreateNotesDto } from './dto/create-notes.dto';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Put,
+  Delete,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
+import { NoteService } from './notes.service';
+import { Notes } from './notes.schema';
 
 @Controller('notes')
-export class NotesController {
-  constructor(private readonly notesService: NotesService) {}
+export class NoteController {
+  constructor(private readonly noteService: NoteService) {}
 
-  // POST: Create a new note
+  // Create a new note
   @Post()
-  async createNote(@Body() createNotesDto: CreateNotesDto) {
-    console.log('Creating a new note with content:', createNotesDto.content);
-    return this.notesService.create(createNotesDto);
+  async createNote(@Body() noteData: Partial<Notes>): Promise<Notes> {
+    try {
+      return await this.noteService.createNote(noteData);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
-  // GET: Get all notes by user_id
-  @Get(':user_id')
-  async getUserNotes(@Param('user_id') user_id: string) {
-    console.log('Fetching all notes for user:', user_id);
-    return this.notesService.findAll(user_id);
+  // Get notes by user and module
+  @Get('user/:userId/module/:moduleId')
+  async getNotesByUserAndModule(
+    @Param('userId') userId: string,
+    @Param('moduleId') moduleId: string,
+  ): Promise<Notes[]> {
+    return this.noteService.getNotesByUserAndModule(userId, moduleId);
   }
 
-  // GET: Get a single note by ID
-  @Get('note/:id')
-  async getNoteById(@Param('id') id: string) {
-    console.log('Fetching note with ID:', id);
-    return this.notesService.findOne(id);
+  // Get All notes 
+  @Get()
+  async getAllNotes(): Promise<Notes[]>{
+    return this.noteService.getNotes();
+  }
+  // Update a note by its ID
+  @Put(':id')
+  async updateNote(
+    @Param('id') noteId: string,
+    @Body() updateData: Partial<Notes>,
+  ): Promise<Notes> {
+    try {
+      return await this.noteService.updateNote(noteId, updateData);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+    }
   }
 
-  // DELETE: Delete a note by ID
-  @Delete('note/:id')
-  async deleteNoteById(@Param('id') id: string) {
-    console.log('Deleting note with ID:', id);
-    return this.notesService.remove(id);
+  // Delete a note by its ID
+  @Delete(':id')
+  async deleteNoteById(@Param('id') noteId: string): Promise<void> {
+    try {
+      return await this.noteService.deleteNote(noteId);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+    }
   }
 }

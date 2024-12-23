@@ -46,7 +46,7 @@ export default function CoursesDashboard() {
   }
 
   const handleCourseClick = (courseId: string) => {
-    router.push(`/courses/${courseId}`);
+    router.push(`/profile/coursesDashboard/resources?courseId=${courseId}`);
   };
 
   return (

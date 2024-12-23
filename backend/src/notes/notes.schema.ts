@@ -1,18 +1,27 @@
-import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { Users } from '../users/users.schema';
+import { Course } from '../courses/courses.schema';
+import { Module } from '../modules/modules.schema';
 
-export type NotesDocument = Notes & Document;
+export type NoteDocument = Notes & Document;
 
 @Schema({ timestamps: true })
 export class Notes {
-  @Prop({ required: true, type: Types.ObjectId, ref: 'Users' })  // Reference to User schema
-  user_id: Types.ObjectId;  // User who created the note
+  @Prop({ type: Types.ObjectId, ref: 'Users', required: true })
+  user_id: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Course', required: true })
+  course_id: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Module', required: true })
+  module_id: Types.ObjectId;
 
   @Prop({ required: true })
-  content: string;  // The content of the note
+  content: string;
 
   @Prop({ default: Date.now })
-  createdAt: Date;  // Automatically set when the note is created
+  last_updated: Date;
 }
 
-export const NotesSchema = SchemaFactory.createForClass(Notes);
+export const NoteSchema = SchemaFactory.createForClass(Notes);

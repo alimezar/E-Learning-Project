@@ -16,18 +16,27 @@ export class Course {
 
   @Prop({ required: true, enum: ['Beginner', 'Intermediate', 'Advanced'] })
   difficultyLevel: 'Beginner' | 'Intermediate' | 'Advanced';
+  
+  @Prop({ required: false })
+  createdBy?: string;
 
-  @Prop({ required: true })
-  createdBy: string; // Instructor ID
+  @Prop({ type: Types.ObjectId, ref: 'Users', required: false })
+  createdById?: Types.ObjectId;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Module' }] })
-  modules: Types.ObjectId[]; // Link modules hierarchically.
+  modules: Types.ObjectId[]; 
 
   @Prop({ type: [String], default: [] })
   multimediaResources: string[]; // Array of URLs for videos, PDFs, etc.
 
   @Prop({ type: [Object], default: [] })
-  versions: Record<string, any>[]; // Store versioned course content.
+  versions: Record<string, any>[]; 
+
+  @Prop({ type: Boolean, default: false })
+  unavailable: boolean;
+
+  @Prop({ type: Date })
+  updatedAt?: Date;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);

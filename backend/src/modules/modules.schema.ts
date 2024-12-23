@@ -12,10 +12,10 @@ export class Module {
   @Prop({ required: true })
   title: string;
 
-  @Prop({ required: true })
-  content: string;
+  @Prop({ type: String, default: '' }) 
+  description: string;
 
-  @Prop({ type: [String], default: [] })
+  @Prop({ type: [{ type: String }], default: [] }) // Store file URLs
   resources: string[];
 }
 
