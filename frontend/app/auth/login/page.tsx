@@ -108,6 +108,20 @@ export default function Login() {
           Login
         </button>
       </form>
+      <p style={{ marginTop: '1rem', fontSize: '1rem' }}>
+        Not a User?{' '}
+        <a
+          href="/auth/register"
+          style={{
+            color: '#007BFF',
+            fontWeight: 'bold',
+            textDecoration: 'underline',
+            cursor: 'pointer',
+          }}
+        >
+          Register Now!
+        </a>
+      </p>
     </section>
   );
 }
