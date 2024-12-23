@@ -101,7 +101,11 @@ type Question = {
   _id: string;
   question: string;
   options: string[];
-  choice?: string;
+  choice?: string; // User's choice for the question
+  moduleId: string;
+  difficulty: string;
+  answer: string;
+  __v: number;
 };
 
 export default function QuizPage({ params }: { params: Promise<{ quizId: string }> }) {
@@ -161,6 +165,36 @@ export default function QuizPage({ params }: { params: Promise<{ quizId: string 
       }
   
       const quizData = await quizResponse.json();
+
+      // Update the quiz with the user's choices
+      const updatedQuiz = {
+        questions: questions.map(({ _id, question, options, choice, answer, difficulty, moduleId }) => ({
+          _id,
+          question,
+          options,
+          choice,
+          answer,
+          difficulty,
+          moduleId
+        })),
+      }
+
+      console.log("Updated Quiz Payload:", JSON.stringify(updatedQuiz)); // Debugging log
+
+      const updateQuizResponse = await fetch(`http://localhost:3001/quizzes/${quizId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedQuiz), // Send updatedQuiz directly
+      });
+
+      if (!updateQuizResponse.ok) {
+        const errorText = await updateQuizResponse.text(); // Log detailed error message
+        console.error("API Error Response:", errorText);
+        throw new Error("Failed to update quiz choices.");
+      }
+
       const userId = quizData.userId;
   
       // Validate userId
