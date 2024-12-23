@@ -70,7 +70,7 @@ export class ResponseService {
 
     const courseId = module.course_id;
 
-    // Get all responses for the user and course
+    // Get all responses for the user and module
     const responses = await this.responseModel.find({ userId, quizId });
 
     // Calculate total score from all responses
@@ -80,9 +80,13 @@ export class ResponseService {
       totalScore += response.score;
     });
 
+    console.log("total score: "+totalScore)
+    console.log("responses length:"+responses.length)
+
     // Calculate the new average score
     const updatedScore = totalScore / responses.length;
 
+    console.log("updated score: "+updatedScore)
     // Find the user's progress and update the average score
     const progress = await this.progressModel.findOne({userId: new Types.ObjectId(userId) , courseId: new Types.ObjectId(courseId)}).exec();
 

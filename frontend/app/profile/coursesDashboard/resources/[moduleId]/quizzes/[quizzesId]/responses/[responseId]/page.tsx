@@ -157,7 +157,7 @@ export default function ResponsePage({ params }: { params: Promise<{ responseId:
   const handleGoModule = () => {
     const moduleId = questions[0]?.moduleId; // Assuming the moduleId is part of the questions
     if (moduleId) {
-      router.push(`/profile/coursesDashboard/resources/${moduleId}/module`); // Redirect to the module page
+      router.push(`/profile/coursesDashboard/resources/${moduleId}`); // Redirect to the module page
     }
   };
 
