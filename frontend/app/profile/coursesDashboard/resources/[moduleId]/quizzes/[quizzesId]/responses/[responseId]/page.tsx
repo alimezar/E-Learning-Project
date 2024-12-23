@@ -8,6 +8,7 @@ export default function ResponsePage({ params }: { params: Promise<{ responseId:
   const [responseScore, setResponseScore] = useState<number | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [error, setError] = useState<string>("");
+  const [passed, setPassed] = useState<boolean>(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function ResponsePage({ params }: { params: Promise<{ responseId:
           const responseJson = JSON.parse(responseText);
           setResponseScore(responseJson.score || null);
           setQuestions(responseJson.questions || []);
+          setPassed(responseJson.passed || false); // Check if the response indicates passing
         } else {
           setResponseScore(null);
         }
@@ -112,11 +114,11 @@ export default function ResponsePage({ params }: { params: Promise<{ responseId:
       transition: "background-color 0.3s ease",
     },
     optionLabelHover: {
-      backgroundColor: "#1e4d4d", // Teal for hover effect
+      backgroundColor: "#1e4d4d",
     },
     optionLabelSelected: {
-      backgroundColor: "#ffc857", // Highlighted option with golden tone
-      color: "#2c295d", // Darker contrast text
+      backgroundColor: "#ffc857",
+      color: "#2c295d",
     },
     correctAnswer: {
       backgroundColor: "#4caf50", // Green for correct answer
@@ -131,6 +133,14 @@ export default function ResponsePage({ params }: { params: Promise<{ responseId:
       borderRadius: "12px", // Less pointy edges
       textAlign: "center", // Center the text
       padding: "0.5rem",
+    },
+    failureMessage: {
+      color: "#40E0D0",
+      fontSize: "1.5rem",
+      textAlign: "center",
+      marginTop: "2rem",
+      fontWeight: "bold",
+      fontFamily: "Trebuchet MS, Arial, sans-serif",
     },
     submitButton: {
       display: "block",
@@ -194,7 +204,12 @@ export default function ResponsePage({ params }: { params: Promise<{ responseId:
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.header}>Your score: {responseScore}/5</h1>
+      <h1 style={styles.header}>Your score: {responseScore}/{questions.length}</h1>
+      {!passed && (
+        <p style={styles.failureMessage}>
+          You did not pass the quiz. Please review the module content and try again.
+        </p>
+      )}
       {questions.map((question) => (
         <div key={question._id} style={styles.questionContainer}>
           <h2 style={styles.question}>{question.question}</h2>

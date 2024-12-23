@@ -190,6 +190,10 @@ export default function QuizPage({ params }: { params: Promise<{ quizzesId: stri
       const userId = quizData.userId;
       const moduleId = quizData.moduleId;
 
+      const module = await fetch(`http://localhost:3001/modules/${moduleId}`)
+      const moduleData = await module.json()
+      const courseId = moduleData.course_id
+
       if (!userId || !moduleId) {
         setError("User or Module ID is missing from the quiz details.");
         return;
@@ -200,7 +204,7 @@ export default function QuizPage({ params }: { params: Promise<{ quizzesId: stri
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ quizId, userId }),
+        body: JSON.stringify({ quizId, userId, courseId }),
       });
 
       if (!response.ok) {

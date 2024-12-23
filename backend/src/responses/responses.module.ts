@@ -8,12 +8,13 @@ import { UsersModule } from '../users/users.module';
 import { ProgressModule } from '../progress/progress.module';
 import { ModulesModule } from '../modules/modules.module'; 
 import { QuestionsModule } from '../questions/questions.module';
+import { CoursesModule } from '../courses/courses.module';
 
 
 @Module({
   imports: [
   MongooseModule.forFeature([{ name: Response.name, schema: ResponseSchema }]), QuizModule, UsersModule, 
-   ProgressModule, ModulesModule, QuestionsModule],
+   ProgressModule, ModulesModule, QuestionsModule, CoursesModule],
   providers: [ResponseService],
   controllers: [ResponseController],
 })
