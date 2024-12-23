@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Thread } from './thread.schema';
 import { NotificationService } from '../../notifications/notifications.service'; // Import NotificationService
-import { Users } from '../../users/users.schema';  // Import Users schema
+import { Users } from '../../users/users.schema'; // Import Users schema
 
 @Injectable()
 export class ThreadService {
@@ -69,14 +69,14 @@ export class ThreadService {
   async getAllThreads(courseId: string) {
     return this.threadModel
       .find({ courseId })
-      .populate('userId', 'name')  // Populate the user's name from the Users collection
+      .populate('userId', 'name') // Populate the user's name from the Users collection
       .exec();
   }
 
   async getThreadById(id: string) {
     return this.threadModel
       .findById(id)
-      .populate('userId', 'name')  // Populate the user's name from the Users collection
+      .populate('userId', 'name') // Populate the user's name from the Users collection
       .exec();
   }
 
@@ -86,5 +86,39 @@ export class ThreadService {
       .populate('userId', 'name') // Populate user details
       .exec();
   }
-  
+
+  async updateThread(
+    threadId: string,
+    userId: string,
+    role: string,
+    updateData: { title?: string; content?: string }
+  ) {
+    const thread = await this.threadModel.findById(threadId);
+    if (!thread) {
+      throw new Error('Thread not found');
+    }
+
+    // Check if the user has permission
+    if (role !== 'admin' && role !== 'instructor' && thread.userId.toString() !== userId) {
+      throw new Error('Unauthorized');
+    }
+
+    // Update the thread
+    Object.assign(thread, updateData);
+    return thread.save();
+  }
+
+  async deleteThread(threadId: string, userId: string, role: string) {
+    const thread = await this.threadModel.findById(threadId);
+    if (!thread) {
+      throw new Error('Thread not found');
+    }
+
+    // Check if the user has permission
+    if (role !== 'admin' && role !== 'instructor' && thread.userId.toString() !== userId) {
+      throw new Error('Unauthorized');
+    }
+
+    return this.threadModel.findByIdAndDelete(threadId);
+  }
 }
