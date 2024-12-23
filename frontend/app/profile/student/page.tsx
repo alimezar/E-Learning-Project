@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 export default function StudentDashboard() {
+  
+
   const [username, setUsername] = useState<string | null>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);

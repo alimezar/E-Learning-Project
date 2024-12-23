@@ -76,6 +76,14 @@ async getCourseModulesWithDetails(
   return await this.coursesService.getCourseModulesWithDetails(courseId);
 }
 
+@Put(':courseId/toggle-availability')
+async toggleCourseAvailability(@Param('courseId') courseId: string): Promise<void> {
+  try {
+    await this.coursesService.toggleCourseAvailability(courseId);
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  }
+}
 
 
 // Get Course Modules 

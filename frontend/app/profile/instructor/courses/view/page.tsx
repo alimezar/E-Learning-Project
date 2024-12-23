@@ -17,7 +17,6 @@ export default function ViewAllCourses() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch all courses
     async function fetchCourses() {
       try {
         const response = await fetch('http://localhost:3001/courses', {
@@ -38,25 +37,27 @@ export default function ViewAllCourses() {
     fetchCourses();
   }, []);
 
-  async function handleDelete(courseId: string) {
+  async function handleToggleAvailability(courseId: string) {
     try {
-      const response = await fetch(`http://localhost:3001/courses/${courseId}/unavailable`, {
+      const response = await fetch(`http://localhost:3001/courses/${courseId}/toggle-availability`, {
         method: 'PUT',
         credentials: 'include',
       });
 
       if (response.ok) {
-        alert('Course marked as unavailable.');
-        setCourses(courses.map((course) =>
-          course._id === courseId ? { ...course, unavailable: true } : course
-        ));
+        setCourses((prevCourses) =>
+          prevCourses.map((course) =>
+            course._id === courseId ? { ...course, unavailable: !course.unavailable } : course
+          )
+        );
+        alert('Course availability status updated.');
       } else {
         const data = await response.json();
-        alert(data.message || 'Failed to mark course as unavailable.');
+        alert(data.message || 'Failed to update course availability.');
       }
     } catch (error) {
-      console.error('Error deleting course:', error);
-      alert('An error occurred while marking the course as unavailable.');
+      console.error('Error toggling course availability:', error);
+      alert('An error occurred while updating course availability.');
     }
   }
 
@@ -76,15 +77,15 @@ export default function ViewAllCourses() {
         {courses.map((course) => (
           <div key={course._id} style={styles.courseCard}>
             <h3 style={styles.courseTitle}>{course.title}</h3>
+            {course.unavailable && <p style={styles.unavailableTag}>Course Unavailable</p>}
             <p style={styles.courseDescription}>{course.description}</p>
             <p style={styles.courseCategory}>Category: {course.category}</p>
             <p style={styles.courseDifficulty}>Difficulty: {course.difficultyLevel}</p>
             <button
               style={styles.buttonDelete}
-              onClick={() => handleDelete(course._id)}
-              disabled={course.unavailable}
+              onClick={() => handleToggleAvailability(course._id)}
             >
-              {course.unavailable ? 'Unavailable' : 'Delete'}
+              {course.unavailable ? 'Mark as Available' : 'Mark as Unavailable'}
             </button>
             <button style={styles.buttonUpdate} onClick={() => handleUpdate(course._id)}>
               Update
@@ -112,4 +113,5 @@ const styles = {
   buttonDelete: { padding: '0.5rem', backgroundColor: 'red', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
   buttonUpdate: { padding: '0.5rem', backgroundColor: 'blue', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginLeft: '0.5rem' },
   buttonVersions: { padding: '0.5rem', backgroundColor: 'green', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginLeft: '0.5rem' },
+  unavailableTag: { color: 'red', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '0.5rem' },
 };
