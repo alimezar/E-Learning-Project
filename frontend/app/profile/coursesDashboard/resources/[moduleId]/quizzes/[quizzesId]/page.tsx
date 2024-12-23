@@ -1,6 +1,7 @@
 "use client";
 
 import { CSSProperties, useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; 
 
 const styles: { [key: string]: CSSProperties } = {
   container: {
@@ -104,6 +105,7 @@ type Question = {
 };
 
 export default function QuizPage({ params }: { params: Promise<{ quizzesId: string }> }) {
+  const router = useRouter(); // Initialize router
   const [questions, setQuestions] = useState<Question[]>([]);
   const [quizId, setQuizId] = useState<string | null>(null);
   const [moduleTitle, setModuleTitle] = useState<string | null>(null);
@@ -112,7 +114,7 @@ export default function QuizPage({ params }: { params: Promise<{ quizzesId: stri
   useEffect(() => {
     async function fetchParams() {
       const resolvedParams = await params;
-      setQuizId(resolvedParams.quizzesId); // Updated to use quizzesId
+      setQuizId(resolvedParams.quizzesId);
     }
 
     fetchParams();
@@ -186,9 +188,10 @@ export default function QuizPage({ params }: { params: Promise<{ quizzesId: stri
       }
 
       const userId = quizData.userId;
+      const moduleId = quizData.moduleId;
 
-      if (!userId) {
-        setError("User ID is missing from the quiz details.");
+      if (!userId || !moduleId) {
+        setError("User or Module ID is missing from the quiz details.");
         return;
       }
 
@@ -206,7 +209,8 @@ export default function QuizPage({ params }: { params: Promise<{ quizzesId: stri
 
       const responseData = await response.json();
       const responseId = responseData._id;
-      window.location.href = `/responses/${responseId}?userId=${userId}&quizId=${quizId}`;
+
+      router.push(`/profile/coursesDashboard/resources/${moduleId}/quizzes/${quizId}/responses/${responseId}`);
     } catch (err) {
       console.error("Error submitting the quiz:", err);
       setError("An error occurred while submitting the quiz. Please try again.");
