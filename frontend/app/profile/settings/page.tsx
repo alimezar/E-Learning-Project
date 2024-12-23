@@ -12,13 +12,12 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Load date of birth from local storage
+    // Load date of birth and gender from local storage
     const savedDob = localStorage.getItem('dob');
     const savedGender = localStorage.getItem('gender');
 
     if (savedDob) setDob(savedDob);
     if (savedGender) setGender(savedGender);
-
   }, []);
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,55 +31,51 @@ export default function SettingsPage() {
       setError('Please select a profile picture.');
       return;
     }
-  
-    // Extract userId from the cookie
+
     const cookies = document.cookie.split('; ');
     const userCookie = cookies.find((cookie) => cookie.startsWith('user='));
     const userId = userCookie ? JSON.parse(decodeURIComponent(userCookie.split('=')[1])).id : null;
-  
+
     if (!userId) {
       setError('Unable to identify the user.');
       return;
     }
-  
+
     const formData = new FormData();
     formData.append('profilePictureUrl', profilePicture);
-  
+
     try {
       const response = await fetch(`http://localhost:3001/users/${userId}`, {
         method: 'PUT',
         body: formData,
-        credentials: 'include', // Send cookies
+        credentials: 'include',
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to upload profile picture.');
       }
-  
+
       setMessage('Profile picture updated successfully!');
     } catch (err: any) {
       setError(err.message);
     }
   };
-  
 
   const handleEmailUpdate = async () => {
     if (!newEmail) {
       setError('Please enter a new email.');
       return;
     }
-  
-    // Extract userId from the cookie
+
     const cookies = document.cookie.split('; ');
     const userCookie = cookies.find((cookie) => cookie.startsWith('user='));
     const userId = userCookie ? JSON.parse(decodeURIComponent(userCookie.split('=')[1])).id : null;
 
-  
     if (!userId) {
       setError('Unable to identify the user.');
       return;
     }
-  
+
     try {
       const response = await fetch(`http://localhost:3001/users/${userId}`, {
         method: 'PUT',
@@ -88,19 +83,46 @@ export default function SettingsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email: newEmail }),
-        credentials: 'include', // Send cookies
+        credentials: 'include',
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to update email.');
       }
-  
+
       setMessage('Email updated successfully!');
     } catch (err: any) {
       setError(err.message);
     }
   };
-  
+
+  const handleDeleteAccount = async () => {
+    const cookies = document.cookie.split('; ');
+    const userCookie = cookies.find((cookie) => cookie.startsWith('user='));
+    const userId = userCookie ? JSON.parse(decodeURIComponent(userCookie.split('=')[1])).id : null;
+
+    if (!userId) {
+      setError('Unable to identify the user.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/users/${userId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete account.');
+      }
+
+      alert('Your account has been deleted. Redirecting to login...');
+      window.location.href = '/auth/login';
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
   const handleDobSave = () => {
     if (dob) {
       localStorage.setItem('dob', dob);
@@ -168,6 +190,14 @@ export default function SettingsPage() {
         </button>
       </div>
 
+      {/* Delete Account Section */}
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Delete Account</h3>
+        <button onClick={handleDeleteAccount} style={styles.dangerButton}>
+          Delete My Account
+        </button>
+      </div>
+
       {/* Date of Birth Section */}
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>Set Date of Birth</h3>
@@ -218,52 +248,15 @@ export default function SettingsPage() {
   );
 }
 
-// Inline Styles
 const styles = {
-  container: {
-    padding: '2rem',
-    fontFamily: 'Arial, sans-serif',
-  },
-  header: {
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    marginBottom: '2rem',
-  },
-  section: {
-    marginBottom: '2rem',
-  },
-  sectionTitle: {
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    marginBottom: '1rem',
-  },
-  input: {
-    padding: '0.5rem',
-    fontSize: '1rem',
-    marginBottom: '1rem',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-    display: 'block',
-    width: '100%',
-  },
-  fileInput: {
-    marginBottom: '1rem',
-  },
-  button: {
-    padding: '0.5rem 1rem',
-    backgroundColor: '#4c9aff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-  },
-  message: {
-    color: 'green',
-    marginTop: '1rem',
-  },
-  error: {
-    color: 'red',
-    marginTop: '1rem',
-  },
+  container: { padding: '2rem', fontFamily: 'Arial, sans-serif' },
+  header: { fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' },
+  section: { marginBottom: '2rem' },
+  sectionTitle: { fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' },
+  input: { padding: '0.5rem', fontSize: '1rem', marginBottom: '1rem', border: '1px solid #ddd', borderRadius: '4px', width: '100%' },
+  fileInput: { marginBottom: '1rem' },
+  button: { padding: '0.5rem 1rem', backgroundColor: '#4c9aff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
+  dangerButton: { padding: '0.5rem 1rem', backgroundColor: '#e74c3c', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
+  message: { color: 'green', marginTop: '1rem' },
+  error: { color: 'red', marginTop: '1rem' },
 };

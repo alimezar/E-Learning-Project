@@ -95,14 +95,11 @@ export default function StudentDashboard() {
         {error && <p style={styles.error}>{error}</p>}
         <div style={styles.courseGrid}>
           {courses.length > 0 ? (
-            courses.map((course) => (
+             courses.slice(0, 3).map((course) => (
               <div key={course._id} style={styles.courseCard}>
                 <h3 style={styles.courseTitle}>{course.title}</h3>
                 <p style={styles.courseDescription}>{course.description}</p>
                 <p style={styles.courseInstructor}>Instructor: {course.createdBy}</p>
-                <a href={`/courses/${course._id}`} style={styles.courseLink}>
-                  View Course
-                </a>
               </div>
             ))
           ) : (
