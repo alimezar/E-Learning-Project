@@ -27,7 +27,6 @@ export default function ModuleDetails() {
   const [editNoteId, setEditNoteId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>('');
 
-  // Get userId from cookie
   useEffect(() => {
     const cookies = document.cookie;
     const userCookie = cookies.split('; ').find((cookie) => cookie.startsWith('user='));
