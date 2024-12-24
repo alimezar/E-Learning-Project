@@ -13,6 +13,7 @@ export default function UpdateModulePage() {
     title: '',
     description: '',
     resources: [] as string[],
+    outdatedResources: [] as string[],
   });
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,40 @@ export default function UpdateModulePage() {
     fetchModuleDetails();
   }, [moduleId]);
 
+  async function handleMarkOutdated(resource: string) {
+    try {
+      const response = await fetch(
+        `http://localhost:3001/modules/${moduleId}/mark-outdated`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ resource }),
+        }
+      );
+  
+      if (response.ok) {
+        alert('Resource marked as outdated.');
+        setModule((prevModule) => ({
+          ...prevModule,
+          outdatedResources: [
+            ...(prevModule.outdatedResources || []), // Ensure it's an array
+            resource,
+          ],
+        }));
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to mark resource as outdated.');
+      }
+    } catch (err) {
+      console.error('Error marking resource as outdated:', err);
+      alert('An error occurred while marking the resource as outdated.');
+    }
+  }
+  
+
   async function handleUpdateModule(e: React.FormEvent) {
     e.preventDefault();
 
@@ -56,6 +91,7 @@ export default function UpdateModulePage() {
       const response = await fetch(`http://localhost:3001/modules/${moduleId}`, {
         method: 'PUT',
         body: formData,
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -97,6 +133,22 @@ export default function UpdateModulePage() {
         </label>
         <label style={styles.label}>
           Resources:
+          {module.resources.map((resource, index) => (
+            <div key={index} style={styles.resourceItem}>
+              <span>{resource}</span>
+              {module.outdatedResources?.includes(resource) ? (
+  <span style={styles.outdatedLabel}>Outdated</span>
+) : (
+  <button
+    type="button"
+    onClick={() => handleMarkOutdated(resource)}
+    style={styles.outdatedButton}
+  >
+    Mark as Outdated
+  </button>
+)}
+            </div>
+          ))}
           <input
             type="file"
             multiple
@@ -113,68 +165,29 @@ export default function UpdateModulePage() {
 }
 
 const styles = {
-  container: {
-    maxWidth: '600px',
-    margin: '0 auto',
-    padding: '2rem',
-    fontFamily: 'Arial, sans-serif',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    borderRadius: '10px',
-    backgroundColor: '#f9f9f9',
-  },
+  container: { maxWidth: '600px', margin: '0 auto', padding: '2rem', fontFamily: 'Arial, sans-serif' },
   title: {
     fontSize: '2rem',
     fontWeight: 'bold',
     marginBottom: '1.5rem',
-    textAlign: 'center' as const,
+    textAlign: 'center', // Fixed TypeScript error
     color: '#333',
   },
-  error: {
-    color: 'red',
-    marginBottom: '1rem',
-    textAlign: 'center' as const,
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '1rem',
-  },
-  label: {
-    fontWeight: 'bold',
-    color: '#555',
-    marginBottom: '0.5rem',
-  },
-  input: {
+  error: { color: 'red', marginBottom: '1rem', textAlign: 'center' },
+  form: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+  label: { fontWeight: 'bold', color: '#555', marginBottom: '0.5rem' },
+  resourceItem: { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' },
+  outdatedLabel: { color: 'red', fontWeight: 'bold' },
+  outdatedButton: {
     padding: '0.5rem',
-    fontSize: '1rem',
-    borderRadius: '4px',
-    border: '1px solid #ccc',
-    width: '100%',
-  },
-  textarea: {
-    padding: '0.5rem',
-    fontSize: '1rem',
-    borderRadius: '4px',
-    border: '1px solid #ccc',
-    minHeight: '100px',
-    width: '100%',
-  },
-  fileInput: {
-    padding: '0.5rem',
-    fontSize: '1rem',
-    borderRadius: '4px',
-    border: '1px solid #ccc',
-    backgroundColor: '#fff',
-  },
-  button: {
-    padding: '0.75rem',
-    fontSize: '1rem',
-    borderRadius: '4px',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#f44336',
     color: '#fff',
+    borderRadius: '4px',
     border: 'none',
     cursor: 'pointer',
-    fontWeight: 'bold',
-    transition: 'background-color 0.3s ease',
   },
-}; 
+  input: { padding: '0.5rem', fontSize: '1rem', borderRadius: '4px', border: '1px solid #ccc', width: '100%' },
+  textarea: { padding: '0.5rem', fontSize: '1rem', borderRadius: '4px', border: '1px solid #ccc', minHeight: '100px', width: '100%' },
+  fileInput: { padding: '0.5rem', fontSize: '1rem', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff' },
+  button: { padding: '0.75rem', fontSize: '1rem', borderRadius: '4px', backgroundColor: '#4CAF50', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', transition: 'background-color 0.3s ease' },
+};

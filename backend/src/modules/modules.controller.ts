@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, HttpException, HttpStatus, UseInterceptors, UploadedFiles, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, HttpException, HttpStatus, UseInterceptors, UploadedFiles, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ModulesService } from './modules.service';
 import { Module } from './modules.schema';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -72,4 +72,17 @@ async getModuleById(@Param('moduleId') moduleId: string) {
   async getModulesByCourseId(@Param('courseId') courseId: string): Promise<{ courseId: string; modules: Module[] }> {
     return this.modulesService.getModulesByCourseIdWithCourseDetails(courseId);
   }
+
+  @Put(':moduleId/mark-outdated')
+async markResourceOutdated(
+  @Param('moduleId') moduleId: string,
+  @Body('resource') resource: string,
+) {
+  if (!resource) {
+    throw new BadRequestException('Resource URL is required.');
+  }
+  return this.modulesService.markResourceOutdated(moduleId, resource);
+}
+
+
 }

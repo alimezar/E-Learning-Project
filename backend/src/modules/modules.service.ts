@@ -101,6 +101,24 @@ export class ModulesService {
     return await module.save();
   }
   
+  async markResourceOutdated(moduleId: string, resource: string): Promise<Module> {
+    const module = await this.moduleModel.findById(moduleId).exec();
+    if (!module) {
+      throw new NotFoundException(`Module with ID ${moduleId} not found.`);
+    }
+  
+    if (!module.resources.includes(resource)) {
+      throw new BadRequestException('Resource not found in module.');
+    }
+  
+    // Add the resource to outdatedResources if not already present
+    if (!module.outdatedResources.includes(resource)) {
+      module.outdatedResources.push(resource);
+    }
+  
+    return module.save();
+  }
+  
   
 
   async removeFileFromModule(moduleId: string, fileUrl: string): Promise<Module> {

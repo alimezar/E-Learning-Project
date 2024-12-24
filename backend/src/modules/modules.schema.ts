@@ -17,6 +17,10 @@ export class Module {
 
   @Prop({ type: [{ type: String }], default: [] }) // Store file URLs
   resources: string[];
+
+  @Prop({ type: [{ type: String }], default: [] }) 
+outdatedResources: string[];
+
 }
 
 export const ModuleSchema = SchemaFactory.createForClass(Module);
