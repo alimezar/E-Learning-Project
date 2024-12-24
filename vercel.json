@@ -1,10 +1,5 @@
 {
-    "projects": [
-      {
-        "src": "frontend/",
-        "use": "@vercel/next"
-      }
-    ],
+    "rootDirectory": "frontend",
     "rewrites": [
       {
         "source": "/backend/(.*)",
