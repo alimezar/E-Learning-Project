@@ -31,12 +31,16 @@ export default function Resources() {
         if (!courseId) throw new Error('Course ID not provided.');
 
         // Fetch multimedia resources
-        const resourcesResponse = await fetch(`http://localhost:3001/courses/${courseId}/resources`);
+        const resourcesResponse = await fetch(`http://localhost:3001/courses/${courseId}/resources`, {
+          credentials: 'include', // Include cookies for authentication
+        });
         if (!resourcesResponse.ok) throw new Error('Failed to fetch multimedia resources.');
         const multimediaResources = await resourcesResponse.json();
 
         // Fetch modules
-        const modulesResponse = await fetch(`http://localhost:3001/courses/${courseId}/modules/details`);
+        const modulesResponse = await fetch(`http://localhost:3001/courses/${courseId}/modules/details`, {
+          credentials: 'include', // Include cookies for authentication
+        });
         if (!modulesResponse.ok) throw new Error('Failed to fetch modules.');
         const modulesData = await modulesResponse.json();
 
@@ -80,7 +84,7 @@ export default function Resources() {
 
       <button
         style={styles.viewButton}
-        onClick={() => window.location.href = `/forum?courseId=${courseId}`}
+        onClick={() => (window.location.href = `/forum?courseId=${courseId}`)}
       >
         Go to Forum
       </button>

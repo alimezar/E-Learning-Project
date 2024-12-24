@@ -279,8 +279,12 @@ async markCourseUnavailable(courseId: string): Promise<void> {
 
 
   // Delete a course by ID
-  async deleteCourse(id: string): Promise<void> {
-    await this.courseModel.findByIdAndDelete(id).exec();
+  async deleteCourse(courseId: string): Promise<void> {
+    const course = await this.courseModel.findById(courseId);
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found.`);
+    }
+    await this.courseModel.findByIdAndDelete(courseId);
   }
 
   async searchCourses(query: string): Promise<Course[]> {

@@ -15,6 +15,26 @@ interface Course {
 export default function ViewAllCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null); // Track user role
+
+  useEffect(() => {
+    // Extract the 'user' cookie
+    const cookies = document.cookie.split('; ');
+    const userCookie = cookies.find((cookie) => cookie.startsWith('user='));
+
+    if (userCookie) {
+      try {
+        const userData = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
+        setUserRole(userData.role); // Set user role
+      } catch (error) {
+        console.error('Failed to parse user cookie:', error);
+        setUserRole(null); // Default to null
+      }
+    } else {
+      setUserRole(null); // Default for unauthenticated users
+    }
+  }, []);
+
 
   useEffect(() => {
     async function fetchCourses() {
@@ -69,6 +89,30 @@ export default function ViewAllCourses() {
     window.location.href = `/profile/instructor/courses/versions/${courseId}`;
   }
 
+  async function handleDelete(courseId: string) {
+    try {
+      const response = await fetch(`http://localhost:3001/courses/${courseId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        setCourses((prevCourses) => prevCourses.filter((course) => course._id !== courseId));
+        alert('Course deleted successfully.');
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to delete course.');
+      }
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      alert('An error occurred while deleting the course.');
+    }
+  }
+  // function getUserRole() {
+  //   const userCookie = document.cookie.split('; ').find((cookie) => cookie.startsWith('user='));
+  //   return userCookie ? JSON.parse(decodeURIComponent(userCookie.split('=')[1])).role : null;
+  // }
+
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>All Courses</h1>
@@ -93,6 +137,14 @@ export default function ViewAllCourses() {
             <button style={styles.buttonVersions} onClick={() => handleViewVersions(course._id)}>
               Versions
             </button>
+            {userRole === 'admin' && (
+              <button
+                style={styles.buttonDelete}
+                onClick={() => handleDelete(course._id)}
+              >
+                Delete
+              </button>
+            )}
           </div>
         ))}
       </div>
