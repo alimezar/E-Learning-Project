@@ -98,6 +98,14 @@ export default function ModulesPage() {
               </button>
               <button
                 onClick={() =>
+                  router.push(`/profile/instructor/courses/modules/${courseId}/questions/${module._id}`)
+                }
+                style={styles.manageQuestionsButton}
+              >
+                Manage Questions
+              </button>
+              <button
+                onClick={() =>
                   router.push(`/profile/instructor/courses/modules/${courseId}/create-quiz/${module._id}`)
                 }
                 style={styles.quizButton}
@@ -137,7 +145,11 @@ const styles = {
   },
   moduleTitle: { fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' },
   moduleDescription: { fontSize: '1rem', color: '#555', marginBottom: '1rem' },
-  buttonGroup: { display: 'flex', justifyContent: 'space-between', gap: '0.5rem' },
+  buttonGroup: { 
+    display: 'flex', 
+    flexDirection: 'column' as const, // Explicitly define as 'column'
+    gap: '0.5rem',
+  },
   updateButton: {
     padding: '0.5rem 1rem',
     backgroundColor: '#2196F3',
@@ -154,6 +166,14 @@ const styles = {
     borderRadius: '4px',
     cursor: 'pointer',
   },
+  manageQuestionsButton: {
+    padding: '0.5rem 1rem',
+    backgroundColor: '#FFC107',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  },
   quizButton: {
     padding: '0.5rem 1rem',
     backgroundColor: '#FF9800',
@@ -163,3 +183,4 @@ const styles = {
     cursor: 'pointer',
   },
 };
+
