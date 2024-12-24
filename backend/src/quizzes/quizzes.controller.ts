@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Put, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Put, Delete, Query, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
 import { QuizService } from './quizzes.service';
 import { Quizzes } from './quizzes.schema';
 
@@ -50,5 +50,17 @@ export class QuizController {
     } catch (error) {
       throw new HttpException(error.message, error.status || HttpStatus.NOT_FOUND);
     }
+  }
+
+  // Fetch quizzes by moduleId and creator role
+  @Get()
+  async getQuizzesByModuleAndRole(
+    @Query('moduleId') moduleId: string,
+    @Query('role') role?: string
+  ) {
+    if (!moduleId) {
+      throw new BadRequestException('moduleId is required');
+    }
+    return this.quizService.getQuizzesByModuleAndRole(moduleId, role);
   }
 }

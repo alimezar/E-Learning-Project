@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -7,8 +7,6 @@ export default function ModuleDetails() {
   const params = useParams();
   const router = useRouter();
   const moduleId = params?.moduleId;
-  const quizzesId = params?.quizzesId;
-
 
   const [module, setModule] = useState({
     title: '',
@@ -16,6 +14,27 @@ export default function ModuleDetails() {
     resources: [] as string[],
   });
   const [error, setError] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>('Guest');
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Extract the 'user' cookie
+    const cookies = document.cookie.split('; ');
+    const userCookie = cookies.find((cookie) => cookie.startsWith('user='));
+
+    if (userCookie) {
+      try {
+        const userData = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
+        setUsername(userData.name);
+        setUserId(userData.id);
+      } catch (error) {
+        console.error('Failed to parse user cookie:', error);
+        setUsername('Guest'); // Fallback to guest
+      }
+    } else {
+      setUsername('Guest'); // Default for unauthenticated users
+    }
+  }, []);
 
   useEffect(() => {
     const fetchModuleDetails = async () => {
@@ -34,6 +53,55 @@ export default function ModuleDetails() {
 
     fetchModuleDetails();
   }, [moduleId]);
+
+  const handleTakeQuiz = async () => {
+    try {
+      if (!userId || !moduleId) throw new Error('User ID or Module ID is missing.');
+  
+      // Check for quizzes created by instructors for this module
+      const instructorQuizResponse = await fetch(`http://localhost:3001/quizzes?moduleId=${moduleId}&role=instructor`);
+      if (!instructorQuizResponse.ok) throw new Error('Failed to fetch quizzes.');
+  
+      const instructorQuizzes = await instructorQuizResponse.json();
+  
+      if (instructorQuizzes.length === 0) {
+        alert('No instructor has initialized the quiz');
+        return;
+      }
+  
+      const instructorQuiz = instructorQuizzes[0]; // Use the first instructor-created quiz
+  
+      // Check if the student has already taken the instructor-created quiz
+      const responseCheck = await fetch(
+        `http://localhost:3001/responses?quizId=${instructorQuiz._id}&userId=${userId}`
+      );
+      if (!responseCheck.ok) throw new Error('Failed to check existing responses.');
+  
+      const studentResponses = await responseCheck.json();
+  
+      if (studentResponses.length > 0) {
+        // Student has already taken the instructor's quiz; create a new quiz
+        const response = await fetch('http://localhost:3001/quizzes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId, moduleId }),
+        });
+  
+        if (!response.ok) throw new Error('Failed to create quiz.');
+  
+        const quiz = await response.json();
+        router.push(`/profile/coursesDashboard/resources/${moduleId}/quizzes/${quiz._id}`);
+      } else {
+        // Student has not taken the instructor's quiz; redirect to the instructor's quiz
+        router.push(`/profile/coursesDashboard/resources/${moduleId}/quizzes/${instructorQuiz._id}`);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+  
 
   if (error) {
     return <p style={{ color: 'red', textAlign: 'center' }}>Error: {error}</p>;
@@ -57,7 +125,7 @@ export default function ModuleDetails() {
 
       <button
         style={styles.quizButton}
-        onClick={() => router.push(`/profile/coursesDashboard/resources/${moduleId}/quizzes/${quizzesId}`)}
+        onClick={handleTakeQuiz}
       >
         Take Quiz
       </button>
@@ -122,9 +190,5 @@ const styles = {
     textAlign: 'center' as const,
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     transition: 'background-color 0.3s ease, transform 0.2s ease',
-  },
-  quizButtonHover: {
-    backgroundColor: '#45A049',
-    transform: 'scale(1.02)',
   },
 };

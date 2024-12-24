@@ -1,24 +1,26 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Response, ResponseDocument } from './responses.schema';
 import { Quizzes } from '../quizzes/quizzes.schema';
 import { Users } from '../users/users.schema';
 import { Progress } from '../progress/progress.schema';
-import { Module } from '../modules/modules.schema'
-
+import { Module } from '../modules/modules.schema';
+import { Questions, QuestionDocument } from '../questions/questions.schema';
+import { Course } from '../courses/courses.schema';
 
 @Injectable()
 export class ResponseService {
   constructor(
     @InjectModel(Response.name) private responseModel: Model<ResponseDocument>,
-    @InjectModel('Quizzes') private quizModel: Model<Quizzes>, // Inject Quiz model
-    @InjectModel('Users') private userModel: Model<Users>, // Inject User model
-    @InjectModel('Progress') private readonly progressModel: Model<Progress>, //Inject Progress model
-    @InjectModel('Module') private readonly moduleModel: Model<Module>, //Inject Module model
+    @InjectModel('Quizzes') private quizModel: Model<Quizzes>,
+    @InjectModel('Users') private userModel: Model<Users>,
+    @InjectModel('Progress') private readonly progressModel: Model<Progress>,
+    @InjectModel('Module') private readonly moduleModel: Model<Module>,
+    @InjectModel('Questions') private readonly questionModel: Model<QuestionDocument>,
+    @InjectModel('Course') private readonly courseModel: Model<Course>,
   ) {}
 
-  // Validate quizId
   private async validateQuizId(quizId: Types.ObjectId): Promise<void> {
     const quiz = await this.quizModel.findById(quizId).exec();
     if (!quiz) {
@@ -26,7 +28,6 @@ export class ResponseService {
     }
   }
 
-  // Validate userId
   private async validateUserId(userId: Types.ObjectId): Promise<void> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
@@ -34,7 +35,6 @@ export class ResponseService {
     }
   }
 
-  // Create a new response
   async createResponse(responseData: Partial<Response>): Promise<Response> {
     const { quizId, userId } = responseData;
 
@@ -49,38 +49,46 @@ export class ResponseService {
     await this.validateUserId(userObjectId);
 
     const quiz = await this.quizModel.findById(quizId);
-
-    let score = 0;  
+    let score = 0;
 
     quiz.questions.forEach((question: any) => {
       if (question.choice === question.answer) {
         score++;
       }
-    })
+    });
 
-    const newResponse = new this.responseModel({ ...responseData, quizId, userId, score });
-    await newResponse.save();
+    const totalQuestions = quiz.questions.length;
+    const passingScore = Math.ceil(totalQuestions / 2);
+    const passed = score >= passingScore;
 
     const moduleId = quiz.moduleId;
     const module = await this.moduleModel.findById(moduleId);
-
     const courseId = module.course_id;
 
-    // Get all responses for the user and course
-    const responses = await this.responseModel.find({ userId, quizId });
+    const questions = quiz.questions;
+    const newResponse = new this.responseModel({
+      ...responseData,
+      quizId,
+      userId,
+      courseId,
+      score,
+      questions,
+      passed,
+    });
+    await newResponse.save();
 
-    // Calculate total score from all responses
-    let totalScore = 0  // no need to add (+ score) since it's saved in the database after newResponse.save(), so now it's actually part of the response.score here
+    const responses = await this.responseModel.find({ userId, courseId });
 
-    responses.forEach(response => {
+    let totalScore = 0;
+    responses.forEach((response) => {
       totalScore += response.score;
     });
 
-    // Calculate the new average score
     const updatedScore = totalScore / responses.length;
 
-    // Find the user's progress and update the average score
-    const progress = await this.progressModel.findOne({userId: new Types.ObjectId(userId) , courseId: new Types.ObjectId(courseId)}).exec();
+    const progress = await this.progressModel
+      .findOne({ userId: new Types.ObjectId(userId), courseId: new Types.ObjectId(courseId) })
+      .exec();
 
     if (progress) {
       progress.averageScore = updatedScore;
@@ -88,16 +96,21 @@ export class ResponseService {
     }
 
     return newResponse;
-
   }
 
-  // Get all responses
   async findAllResponses(): Promise<Response[]> {
     return this.responseModel.find().populate('quizId').populate('userId').exec();
   }
 
-  // Get a response by ID
   async findResponseById(responseId: string): Promise<Response | null> {
     return this.responseModel.findById(responseId).populate('quizId').populate('userId').exec();
+  }
+
+  // Check if a response exists for a quiz and user
+  async getResponsesByQuizAndUser(quizId: string, userId: string): Promise<ResponseDocument[]> {
+    return this.responseModel.find({
+      quizId: new Types.ObjectId(quizId),
+      userId: new Types.ObjectId(userId),
+    }).exec();
   }
 }
