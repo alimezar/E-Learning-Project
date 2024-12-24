@@ -1,8 +1,9 @@
+"use client";
+
 import { useState } from "react";
 
 export default function InitiateQuiz() {
   const [type, setType] = useState<string>("mcq");
-  const [difficulty, setDifficulty] = useState<string>("easy");
   const [size, setSize] = useState<number>(5);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -30,12 +31,23 @@ export default function InitiateQuiz() {
         throw new Error("User ID or Module ID is missing.");
       }
 
+      // Check if a quiz already exists for this module by an instructor
+      const existingQuizResponse = await fetch(`http://localhost:3001/quizzes?moduleId=${moduleId}&instructorOnly=true`);
+      if (!existingQuizResponse.ok) {
+        throw new Error("Failed to check existing quizzes.");
+      }
+
+      const existingQuiz = await existingQuizResponse.json();
+      if (existingQuiz.length > 0) {
+        throw new Error("A quiz for this module is already initialized by an instructor.");
+      }
+
       const response = await fetch("http://localhost:3001/quizzes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId, moduleId, type, difficulty, size }),
+        body: JSON.stringify({ userId, moduleId, type, size }),
       });
 
       if (!response.ok) {
@@ -69,22 +81,6 @@ export default function InitiateQuiz() {
           <option value="mcq">Multiple Choice (MCQ)</option>
           <option value="trueFalse">True/False</option>
           <option value="both">Both</option>
-        </select>
-      </div>
-
-      <div style={styles.formGroup}>
-        <label htmlFor="difficulty" style={styles.label}>
-          Difficulty:
-        </label>
-        <select
-          id="difficulty"
-          value={difficulty}
-          onChange={(e) => setDifficulty(e.target.value)}
-          style={styles.select}
-        >
-          <option value="easy">Easy</option>
-          <option value="medium">Medium</option>
-          <option value="hard">Hard</option>
         </select>
       </div>
 
