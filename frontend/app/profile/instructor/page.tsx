@@ -180,6 +180,9 @@ export default function InstructorDashboard() {
           <Link href="/profile/instructor/courses/view" style={styles.button}>
             View All Courses
           </Link>
+          <Link href="/progress/instructor" style={styles.button}>
+    View progress
+  </Link>
         </div>
       </div>
 
