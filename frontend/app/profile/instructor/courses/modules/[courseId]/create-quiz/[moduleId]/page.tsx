@@ -39,7 +39,8 @@ export default function InitiateQuiz() {
 
       const existingQuiz = await existingQuizResponse.json();
       if (existingQuiz.length > 0) {
-        throw new Error("A quiz for this module is already initialized by an instructor.");
+        setError("A quiz for this module is already initialized by an instructor.");
+        return;
       }
 
       const response = await fetch("http://localhost:3001/quizzes", {
@@ -58,6 +59,15 @@ export default function InitiateQuiz() {
     } catch (err: any) {
       console.error(err);
       setError(err.message || "An error occurred while creating the quiz.");
+    }
+  };
+
+  const handleSizeChange = (value: number) => {
+    if (value > 10) {
+      setError("Quiz size cannot exceed 10 questions.");
+    } else {
+      setError(null);
+      setSize(value);
     }
   };
 
@@ -86,19 +96,20 @@ export default function InitiateQuiz() {
 
       <div style={styles.formGroup}>
         <label htmlFor="size" style={styles.label}>
-          Quiz Size (Number of Questions):
+          Quiz Size (Number of Questions) (Max: 10):
         </label>
         <input
           id="size"
           type="number"
           min="1"
+          max="10"
           value={size}
-          onChange={(e) => setSize(parseInt(e.target.value))}
+          onChange={(e) => handleSizeChange(parseInt(e.target.value))}
           style={styles.input}
         />
       </div>
 
-      <button onClick={handleCreateQuiz} style={styles.button}>
+      <button onClick={handleCreateQuiz} style={styles.button} disabled={size > 10}>
         Initiate Quiz
       </button>
     </div>
