@@ -105,4 +105,12 @@ export class ResponseService {
   async findResponseById(responseId: string): Promise<Response | null> {
     return this.responseModel.findById(responseId).populate('quizId').populate('userId').exec();
   }
+
+  // Check if a response exists for a quiz and user
+  async getResponsesByQuizAndUser(quizId: string, userId: string): Promise<ResponseDocument[]> {
+    return this.responseModel.find({
+      quizId: new Types.ObjectId(quizId),
+      userId: new Types.ObjectId(userId),
+    }).exec();
+  }
 }

@@ -57,23 +57,51 @@ export default function ModuleDetails() {
   const handleTakeQuiz = async () => {
     try {
       if (!userId || !moduleId) throw new Error('User ID or Module ID is missing.');
-
-      const response = await fetch('http://localhost:3001/quizzes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId, moduleId }),
-      });
-
-      if (!response.ok) throw new Error('Failed to create quiz.');
-
-      const quiz = await response.json();
-      router.push(`/profile/coursesDashboard/resources/${moduleId}/quizzes/${quiz._id}`);
+  
+      // Check for quizzes created by instructors for this module
+      const instructorQuizResponse = await fetch(`http://localhost:3001/quizzes?moduleId=${moduleId}&role=instructor`);
+      if (!instructorQuizResponse.ok) throw new Error('Failed to fetch quizzes.');
+  
+      const instructorQuizzes = await instructorQuizResponse.json();
+  
+      if (instructorQuizzes.length === 0) {
+        alert('No instructor has initialized the quiz');
+        return;
+      }
+  
+      const instructorQuiz = instructorQuizzes[0]; // Use the first instructor-created quiz
+  
+      // Check if the student has already taken the instructor-created quiz
+      const responseCheck = await fetch(
+        `http://localhost:3001/responses?quizId=${instructorQuiz._id}&userId=${userId}`
+      );
+      if (!responseCheck.ok) throw new Error('Failed to check existing responses.');
+  
+      const studentResponses = await responseCheck.json();
+  
+      if (studentResponses.length > 0) {
+        // Student has already taken the instructor's quiz; create a new quiz
+        const response = await fetch('http://localhost:3001/quizzes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId, moduleId }),
+        });
+  
+        if (!response.ok) throw new Error('Failed to create quiz.');
+  
+        const quiz = await response.json();
+        router.push(`/profile/coursesDashboard/resources/${moduleId}/quizzes/${quiz._id}`);
+      } else {
+        // Student has not taken the instructor's quiz; redirect to the instructor's quiz
+        router.push(`/profile/coursesDashboard/resources/${moduleId}/quizzes/${instructorQuiz._id}`);
+      }
     } catch (err: any) {
       setError(err.message);
     }
   };
+  
 
   if (error) {
     return <p style={{ color: 'red', textAlign: 'center' }}>Error: {error}</p>;

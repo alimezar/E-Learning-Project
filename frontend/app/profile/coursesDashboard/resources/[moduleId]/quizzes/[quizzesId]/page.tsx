@@ -153,13 +153,34 @@ export default function QuizPage({ params }: { params: Promise<{ quizzesId: stri
       setError("Quiz ID is missing. Cannot submit the quiz.");
       return;
     }
-
+  
     try {
+      // Extract userId from cookies
+      const cookies = document.cookie.split("; ");
+      const userCookie = cookies.find((cookie) => cookie.startsWith("user="));
+      let cookieUserId: string | null = null;
+  
+      if (userCookie) {
+        try {
+          const userData = JSON.parse(decodeURIComponent(userCookie.split("=")[1]));
+          if (!userData || !userData.id) {
+            throw new Error("Invalid user data in cookies.");
+          }
+          cookieUserId = userData.id;
+        } catch (error) {
+          throw new Error("Failed to parse user ID from cookies.");
+        }
+      }
+  
+      if (!cookieUserId) {
+        throw new Error("User ID is missing from cookies.");
+      }
+  
       const quizResponse = await fetch(`http://localhost:3001/quizzes/${quizId}`);
       if (!quizResponse.ok) {
         throw new Error("Failed to fetch quiz details.");
       }
-
+  
       const quizData = await quizResponse.json();
       const updatedQuiz = {
         questions: questions.map(({ _id, question, options, choice, answer, difficulty, moduleId }) => ({
@@ -172,7 +193,7 @@ export default function QuizPage({ params }: { params: Promise<{ quizzesId: stri
           moduleId,
         })),
       };
-
+  
       const updateQuizResponse = await fetch(`http://localhost:3001/quizzes/${quizId}`, {
         method: "PUT",
         headers: {
@@ -180,25 +201,25 @@ export default function QuizPage({ params }: { params: Promise<{ quizzesId: stri
         },
         body: JSON.stringify(updatedQuiz),
       });
-
+  
       if (!updateQuizResponse.ok) {
         const errorText = await updateQuizResponse.text();
         console.error("API Error Response:", errorText);
         throw new Error("Failed to update quiz choices.");
       }
-
-      const userId = quizData.userId;
+  
+      const userId = cookieUserId; // Use the extracted userId from cookies
       const moduleId = quizData.moduleId;
-
-      const module = await fetch(`http://localhost:3001/modules/${moduleId}`)
-      const moduleData = await module.json()
-      const courseId = moduleData.course_id
-
+  
+      const module = await fetch(`http://localhost:3001/modules/${moduleId}`);
+      const moduleData = await module.json();
+      const courseId = moduleData.course_id;
+  
       if (!userId || !moduleId) {
         setError("User or Module ID is missing from the quiz details.");
         return;
       }
-
+  
       const response = await fetch(`http://localhost:3001/responses`, {
         method: "POST",
         headers: {
@@ -206,20 +227,21 @@ export default function QuizPage({ params }: { params: Promise<{ quizzesId: stri
         },
         body: JSON.stringify({ quizId, userId, courseId }),
       });
-
+  
       if (!response.ok) {
         throw new Error("Failed to submit the quiz. Please try again.");
       }
-
+  
       const responseData = await response.json();
       const responseId = responseData._id;
-
+  
       router.push(`/profile/coursesDashboard/resources/${moduleId}/quizzes/${quizId}/responses/${responseId}`);
     } catch (err) {
       console.error("Error submitting the quiz:", err);
       setError("An error occurred while submitting the quiz. Please try again.");
     }
   };
+  
 
   const answeredCount = questions.filter((q) => q.choice && q.options.includes(q.choice)).length;
 

@@ -26,87 +26,58 @@ export class QuizService {
   }
 
   // Create a new quiz
-  async createQuiz(quizData: Partial<Quizzes>): Promise<Quizzes> {
-    if (!quizData.moduleId) {
-      throw new BadRequestException('moduleId is required');
-    }
-  
-    const moduleId = new Types.ObjectId(quizData.moduleId); // Convert to ObjectId
-  
-    if (!quizData.userId) {
-      throw new BadRequestException('userId is required');
-    }
-  
-    const userId = new Types.ObjectId(quizData.userId); // Convert userId to ObjectId
-  
-    // Retrieve the module directly and extract the courseId
-    const module = await this.moduleModel.findById(moduleId).exec();
-    if (!module) {
-      throw new BadRequestException(`Module with ID "${quizData.moduleId}" not found.`);
-    }
-  
-    console.log(`Fetched module: ${JSON.stringify(module)}`); // Log full module
-  
-    const courseId = module.course_id ? new Types.ObjectId(module.course_id) : null;
-    if (!courseId) {
-      throw new BadRequestException('The associated course ID is missing from the module.');
-    }
-  
-    console.log(`Looking for progress with userId: ${userId} and courseId: ${courseId}`); // Debug log
-  
-    // Fetch progress for the user in the course
-    const progress = await this.progressModel
-      .findOne({ userId, courseId })
-      .exec();
-  
-    if (!progress) {
-      throw new BadRequestException(
-        `Progress not found for userId "${quizData.userId}" and courseId "${courseId}".`
-      );
-    }
-  
-    if (progress.averageScore === undefined || progress.averageScore === null) {
-      throw new BadRequestException(
-        'Progress record exists but averageScore is missing or invalid.'
-      );
-    }
-  
-    const averageScore = progress.averageScore;
-  
-    // Determine quiz difficulty based on averageScore
-    let difficulty: string;
+async createQuiz(quizData: Partial<Quizzes>): Promise<Quizzes> {
+  if (!quizData.moduleId) {
+    throw new BadRequestException('moduleId is required');
+  }
 
-    // Calculate averageScore as a percentage of the total possible score
+  const moduleId = new Types.ObjectId(quizData.moduleId); // Convert to ObjectId
+
+  if (!quizData.userId) {
+    throw new BadRequestException('userId is required');
+  }
+
+  const userId = new Types.ObjectId(quizData.userId); // Convert userId to ObjectId
+
+  // Retrieve the module directly and extract the courseId
+  const module = await this.moduleModel.findById(moduleId).exec();
+  if (!module) {
+    throw new BadRequestException(`Module with ID "${quizData.moduleId}" not found.`);
+  }
+
+  console.log(`Fetched module: ${JSON.stringify(module)}`); // Log full module
+
+  const courseId = module.course_id ? new Types.ObjectId(module.course_id) : null;
+  if (!courseId) {
+    throw new BadRequestException('The associated course ID is missing from the module.');
+  }
+
+  console.log(`Looking for progress with userId: ${userId} and courseId: ${courseId}`); // Debug log
+
+  // Fetch the user's role
+  const user = await this.userModel.findById(userId).exec();
+  if (!user) {
+    throw new BadRequestException(`User with ID "${quizData.userId}" not found.`);
+  }
+
+  // If the user is an instructor, skip progress checks and create the quiz directly
+  if (user.role === 'instructor') {
+    console.log('User is an instructor; skipping progress validation.');
 
     const size = quizData.size ?? 5;
-    const totalQuestions = size
-    const scorePercentage = (averageScore / totalQuestions) * 100;
 
-    console.log("totalQuestions: "+totalQuestions)
-    console.log("score percetnage: "+scorePercentage)
-
-    // Determine difficulty based on percentage thresholds
-    if (scorePercentage < 40) {
-      difficulty = 'easy';
-    } else if (scorePercentage >= 40 && scorePercentage < 80) {
-      difficulty = 'medium';
-    } else {
-      difficulty = 'hard';
-    }
-
-
-    // Fetch 5 random questions matching the module and difficulty
+    // Fetch random questions matching the module
     const questions = await this.questionModel.aggregate([
-      { $match: { moduleId: quizData.moduleId.toString(), difficulty  } }, // Match by moduleId and difficulty
-      { $sample: { size: totalQuestions } }, // Randomly select 5 questions
+      { $match: { moduleId: quizData.moduleId.toString() } },
+      { $sample: { size } },
     ]);
-  
-    if (questions.length < 5) {
+
+    if (questions.length < size) {
       throw new BadRequestException('Not enough questions available for the quiz.');
     }
-  
+
     console.log(`Fetched ${questions.length} questions for quiz creation.`);
-  
+
     // Create and save the new quiz
     const newQuiz = new this.quizModel({
       ...quizData,
@@ -114,9 +85,69 @@ export class QuizService {
       moduleId,
       questions,
     });
-  
+
     return newQuiz.save();
   }
+
+  const progress = await this.progressModel
+    .findOne({ userId, courseId })
+    .exec();
+
+  if (!progress) {
+    throw new BadRequestException(
+      `Progress not found for userId "${quizData.userId}" and courseId "${courseId}".`
+    );
+  }
+
+  if (progress.averageScore === undefined || progress.averageScore === null) {
+    throw new BadRequestException(
+      'Progress record exists but averageScore is missing or invalid.'
+    );
+  }
+
+  const averageScore = progress.averageScore;
+
+  // Determine quiz difficulty based on averageScore
+  let difficulty: string;
+
+  const size = quizData.size ?? 5;
+  const totalQuestions = size;
+  const scorePercentage = (averageScore / totalQuestions) * 100;
+
+  console.log('totalQuestions: ' + totalQuestions);
+  console.log('scorePercentage: ' + scorePercentage);
+
+  if (scorePercentage < 40) {
+    difficulty = 'easy';
+  } else if (scorePercentage >= 40 && scorePercentage < 80) {
+    difficulty = 'medium';
+  } else {
+    difficulty = 'hard';
+  }
+
+  // Fetch random questions matching the module and difficulty
+  const questions = await this.questionModel.aggregate([
+    { $match: { moduleId: quizData.moduleId.toString(), difficulty } },
+    { $sample: { size: totalQuestions } },
+  ]);
+
+  if (questions.length < totalQuestions) {
+    throw new BadRequestException('Not enough questions available for the quiz.');
+  }
+
+  console.log(`Fetched ${questions.length} questions for quiz creation.`);
+
+  // Create and save the new quiz
+  const newQuiz = new this.quizModel({
+    ...quizData,
+    userId,
+    moduleId,
+    questions,
+  });
+
+  return newQuiz.save();
+}
+
     
   // Get all quizzes
   async getQuizzes(): Promise<Quizzes[]> {
@@ -157,4 +188,22 @@ export class QuizService {
       throw new NotFoundException(`Quiz with ID "${quizId}" not found.`);
     }
   }
+
+   // Fetch quizzes by moduleId and creator role
+   async getQuizzesByModuleAndRole(moduleId: string, role?: string): Promise<QuizDocument[]> {
+    const filter: any = { moduleId: new Types.ObjectId(moduleId) };
+
+    if (role) {
+      // If role is specified, populate `userId` and filter by role
+      filter['userId.role'] = role;
+    }
+
+    const quizzes = await this.quizModel.find(filter).populate('userId').exec();
+    if (!quizzes || quizzes.length === 0) {
+      throw new NotFoundException('No quizzes found for the given module and role.');
+    }
+
+    return quizzes;
+  }
+  
 }

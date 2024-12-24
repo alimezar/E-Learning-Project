@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Query, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
 import { ResponseService } from './responses.services';
 import { Response } from './responses.schema';
 
@@ -23,5 +23,17 @@ export class ResponseController {
   @Get(':responseId')
   async findResponseById(@Param('responseId') responseId: string) {
     return this.responseService.findResponseById(responseId);
+  }
+
+  // Check for responses by quizId and userId
+  @Get()
+  async getResponsesByQuizAndUser(
+    @Query('quizId') quizId: string,
+    @Query('userId') userId: string
+  ) {
+    if (!quizId || !userId) {
+      throw new BadRequestException('quizId and userId are required');
+    }
+    return this.responseService.getResponsesByQuizAndUser(quizId, userId);
   }
 }
