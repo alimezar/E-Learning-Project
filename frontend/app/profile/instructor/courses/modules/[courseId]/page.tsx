@@ -66,7 +66,15 @@ export default function ModulesPage() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Modules</h1>
+      <div style={styles.header}>
+        <h1 style={styles.title}>Modules</h1>
+        <button
+          style={styles.createButton}
+          onClick={() => router.push(`/profile/instructor/courses/modules/${courseId}/create/`)}
+        >
+          Create Module
+        </button>
+      </div>
       {error && <p style={styles.error}>{error}</p>}
       <ul style={styles.moduleList}>
         {modules.map((module) => (
@@ -106,7 +114,17 @@ export default function ModulesPage() {
 
 const styles = {
   container: { maxWidth: 800, margin: '0 auto', padding: '2rem', fontFamily: 'Arial, sans-serif' },
-  title: { fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem', textAlign: 'center' as const },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' },
+  title: { fontSize: '2rem', fontWeight: 'bold', textAlign: 'center' as const },
+  createButton: {
+    padding: '0.5rem 1rem',
+    backgroundColor: '#4caf50',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  },
   error: { color: 'red', marginBottom: '1rem', textAlign: 'center' as const },
   moduleList: { listStyle: 'none', padding: 0 },
   moduleCard: {
@@ -138,7 +156,7 @@ const styles = {
   },
   quizButton: {
     padding: '0.5rem 1rem',
-    backgroundColor: '#4caf50',
+    backgroundColor: '#FF9800',
     color: '#fff',
     border: 'none',
     borderRadius: '4px',

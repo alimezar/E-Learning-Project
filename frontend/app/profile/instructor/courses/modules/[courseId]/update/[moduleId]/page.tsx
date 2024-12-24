@@ -72,24 +72,109 @@ export default function UpdateModulePage() {
   }
 
   return (
-    <div>
-      <h1>Update Module</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleUpdateModule}>
-        <input
-          type="text"
-          value={module.title}
-          onChange={(e) => setModule({ ...module, title: e.target.value })}
-          required
-        />
-        <textarea
-          value={module.description}
-          onChange={(e) => setModule({ ...module, description: e.target.value })}
-          required
-        />
-        <input type="file" multiple onChange={(e) => setNewFiles(Array.from(e.target.files || []))} />
-        <button type="submit">Update Module</button>
+    <div style={styles.container}>
+      <h1 style={styles.title}>Update Module</h1>
+      {error && <p style={styles.error}>{error}</p>}
+      <form onSubmit={handleUpdateModule} style={styles.form}>
+        <label style={styles.label}>
+          Title:
+          <input
+            type="text"
+            value={module.title}
+            onChange={(e) => setModule({ ...module, title: e.target.value })}
+            required
+            style={styles.input}
+          />
+        </label>
+        <label style={styles.label}>
+          Description:
+          <textarea
+            value={module.description}
+            onChange={(e) => setModule({ ...module, description: e.target.value })}
+            required
+            style={styles.textarea}
+          />
+        </label>
+        <label style={styles.label}>
+          Resources:
+          <input
+            type="file"
+            multiple
+            onChange={(e) => setNewFiles(Array.from(e.target.files || []))}
+            style={styles.fileInput}
+          />
+        </label>
+        <button type="submit" style={styles.button}>
+          Update Module
+        </button>
       </form>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    maxWidth: '600px',
+    margin: '0 auto',
+    padding: '2rem',
+    fontFamily: 'Arial, sans-serif',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    borderRadius: '10px',
+    backgroundColor: '#f9f9f9',
+  },
+  title: {
+    fontSize: '2rem',
+    fontWeight: 'bold',
+    marginBottom: '1.5rem',
+    textAlign: 'center' as const,
+    color: '#333',
+  },
+  error: {
+    color: 'red',
+    marginBottom: '1rem',
+    textAlign: 'center' as const,
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '1rem',
+  },
+  label: {
+    fontWeight: 'bold',
+    color: '#555',
+    marginBottom: '0.5rem',
+  },
+  input: {
+    padding: '0.5rem',
+    fontSize: '1rem',
+    borderRadius: '4px',
+    border: '1px solid #ccc',
+    width: '100%',
+  },
+  textarea: {
+    padding: '0.5rem',
+    fontSize: '1rem',
+    borderRadius: '4px',
+    border: '1px solid #ccc',
+    minHeight: '100px',
+    width: '100%',
+  },
+  fileInput: {
+    padding: '0.5rem',
+    fontSize: '1rem',
+    borderRadius: '4px',
+    border: '1px solid #ccc',
+    backgroundColor: '#fff',
+  },
+  button: {
+    padding: '0.75rem',
+    fontSize: '1rem',
+    borderRadius: '4px',
+    backgroundColor: '#4CAF50',
+    color: '#fff',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    transition: 'background-color 0.3s ease',
+  },
+}; 
