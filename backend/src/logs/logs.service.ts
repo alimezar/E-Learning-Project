@@ -27,6 +27,7 @@ export class LogsService {
   async deleteLog(type: 'instructor_request', userId: string): Promise<void> {
     await this.logModel.deleteOne({ type, userId }).exec();
   }
+  
   async getLogByUserId(userId: string, type: 'instructor_request'): Promise<Logs | null> {
     return this.logModel.findOne({ userId, type }).exec();
   }

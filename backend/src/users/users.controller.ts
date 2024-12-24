@@ -121,45 +121,38 @@ async requestInstructor(@Req() req) {
 }
 
 
-  @Post(':userId/approve-instructor')
-  async approveInstructor(@Param('userId') userId: string) {
-    if (!userId) {
-      throw new HttpException('User ID is missing', HttpStatus.BAD_REQUEST);
-    }
-
-    const user = await this.usersService.getUserById(userId);
-    if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-    }
-
-    // Update user's role
-    await this.usersService.updateUser(userId, { role: 'instructor' });
-
-    // Log the approval
-    await this.logsService.createLog(
-      'instructor_request',
-      `User ${user.name} was approved as an instructor.`,
-      '',
-      userId,
-      user.email,
-    );
-
-    return { message: 'User promoted to instructor successfully.' };
+@Post(':userId/approve-instructor')
+async approveInstructor(@Param('userId') userId: string) {
+  if (!userId) {
+    throw new HttpException('User ID is missing', HttpStatus.BAD_REQUEST);
   }
 
-
-  @Delete(':userId/reject-instructor')
-  async rejectInstructor(@Param('userId') userId: string) {
-    // Log the rejection
-    await this.logsService.createLog(
-      'instructor_request',
-      `Instructor request from user with ID ${userId} was rejected.`,
-      '',
-      userId,
-    );
-
-    return { message: 'Instructor request rejected successfully.' };
+  const user = await this.usersService.getUserById(userId);
+  if (!user) {
+    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
+
+  // Update user's role
+  await this.usersService.updateUser(userId, { role: 'instructor' });
+
+  // Remove the log after approval
+  await this.logsService.deleteLog('instructor_request', userId);
+
+  return { message: 'User promoted to instructor successfully.' };
+}
+
+@Delete(':userId/reject-instructor')
+async rejectInstructor(@Param('userId') userId: string) {
+  if (!userId) {
+    throw new HttpException('User ID is missing', HttpStatus.BAD_REQUEST);
+  }
+
+  // Remove the log after rejection
+  await this.logsService.deleteLog('instructor_request', userId);
+
+  return { message: 'Instructor request rejected successfully.' };
+}
+
 }
   
 

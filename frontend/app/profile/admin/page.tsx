@@ -52,7 +52,8 @@ export default function AdminDashboard() {
   
       if (response.ok) {
         alert('User successfully promoted to instructor.');
-        setLogs((prevLogs) => prevLogs.filter((log) => log.userId !== userId)); // Remove from logs
+        // Remove the log locally
+        setLogs((prevLogs) => prevLogs.filter((log) => log.userId !== userId));
       } else {
         const data = await response.json();
         alert(data.message || 'Failed to approve user.');
@@ -63,17 +64,22 @@ export default function AdminDashboard() {
     }
   };
   
-
   const handleReject = async (userId: string) => {
+    if (!userId) {
+      alert('User ID is missing.');
+      return;
+    }
+  
     try {
       const response = await fetch(`http://localhost:3001/users/${userId}/reject-instructor`, {
         method: 'DELETE',
         credentials: 'include',
       });
-
+  
       if (response.ok) {
         alert('Request rejected successfully.');
-        setLogs((prevLogs) => prevLogs.filter((log) => log.userId !== userId)); // Remove from logs
+        // Remove the log locally
+        setLogs((prevLogs) => prevLogs.filter((log) => log.userId !== userId));
       } else {
         const data = await response.json();
         alert(data.message || 'Failed to reject request.');
@@ -83,6 +89,7 @@ export default function AdminDashboard() {
       alert('An error occurred while rejecting the request.');
     }
   };
+  
 
   return (
     <div style={styles.container}>
