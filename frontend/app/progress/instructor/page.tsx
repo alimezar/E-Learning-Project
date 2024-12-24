@@ -270,6 +270,24 @@ export default function InstructorProgressPage() {
       {selectedCourseId && studentProgress.length === 0 && (
         <p>No student progress data available for this course.</p>
       )}
+      <button
+  onClick={() => window.print()}
+  style={{
+    position: 'fixed',
+    bottom: '20px',
+    right: '20px',
+    backgroundColor: '#4CAF50',
+    color: 'white',
+    padding: '10px 20px',
+    borderRadius: '5px',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '1em',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+  }}
+>
+  Download Analytics
+</button>
     </div>
   );
 }

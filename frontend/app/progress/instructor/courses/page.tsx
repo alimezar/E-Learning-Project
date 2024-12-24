@@ -43,6 +43,7 @@ export default function CourseModulesPage() {
   const [notCompletedCount, setNotCompletedCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [moduleRatings, setModuleRatings] = useState<{ moduleId: string; title: string; rating: string }[]>([]);
 
   // Extract courseId from query parameters
   const searchParams = useSearchParams();
@@ -171,6 +172,29 @@ export default function CourseModulesPage() {
     }
   };
 
+  // Fetch module ratings
+  const fetchModuleRatings = async () => {
+    try {
+      const ratings = await Promise.all(
+        modules.map(async (module) => {
+          const totalStudents = progressRecords.filter((record) => record.courseId === courseId).length;
+          const completedStudents = progressRecords.filter((record) =>
+            record.completedCourses.includes(module._id)
+          ).length;
+
+          return {
+            moduleId: module._id,
+            title: module.title,
+            rating: `${completedStudents}/${totalStudents}`,
+          };
+        })
+      );
+      setModuleRatings(ratings);
+    } catch (error) {
+      console.error('Error fetching module ratings:', error);
+    }
+  };
+
   if (error) {
     return <p style={{ color: 'red' }}>{error}</p>;
   }
@@ -246,6 +270,55 @@ export default function CourseModulesPage() {
           </ul>
         </div>
       )}
+
+      {/* Show Module Ratings Button */}
+      <div style={{ marginTop: '20px' }}>
+        <button
+          onClick={fetchModuleRatings}
+          style={{
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '1em',
+          }}
+        >
+          Show Module Ratings
+        </button>
+
+        {moduleRatings.length > 0 && (
+          <div style={{ marginTop: '20px' }}>
+            <h3>Module Ratings</h3>
+            <ul>
+              {moduleRatings.map((rating) => (
+                <li key={rating.moduleId}>
+                  {rating.title}: {rating.rating}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+      <button
+  onClick={() => window.print()}
+  style={{
+    position: 'fixed',
+    bottom: '20px',
+    right: '20px',
+    backgroundColor: '#4CAF50',
+    color: 'white',
+    padding: '10px 20px',
+    borderRadius: '5px',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '1em',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+  }}
+>
+  Download Analytics
+</button>
     </div>
   );
 }
