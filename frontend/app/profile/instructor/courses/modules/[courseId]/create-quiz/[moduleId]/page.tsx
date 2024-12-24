@@ -62,14 +62,18 @@ export default function InitiateQuiz() {
     }
   };
 
-  const handleSizeChange = (value: number) => {
-    if (value > 10) {
-      setError("Quiz size cannot exceed 10 questions.");
-    } else {
-      setError(null);
-      setSize(value);
-    }
-  };
+    const handleSizeChange = (value: string) => {
+        const parsedValue = parseInt(value);
+        if (isNaN(parsedValue)) {
+        setSize(0); // Set to a default valid value, e.g., 0, when input is invalid
+        } else if (parsedValue > 10) {
+        setError("Quiz size cannot exceed 10 questions.");
+        } else {
+        setError(null);
+        setSize(parsedValue);
+        }
+    };
+  
 
   return (
     <div style={styles.container}>
@@ -99,13 +103,13 @@ export default function InitiateQuiz() {
           Quiz Size (Number of Questions) (Max: 10):
         </label>
         <input
-          id="size"
-          type="number"
-          min="1"
-          max="10"
-          value={size}
-          onChange={(e) => handleSizeChange(parseInt(e.target.value))}
-          style={styles.input}
+        id="size"
+        type="number"
+        min="1"
+        max="10"
+        value={size || ""} // Use an empty string when size is 0 or undefined
+        onChange={(e) => handleSizeChange(e.target.value)}
+        style={styles.input}
         />
       </div>
 
