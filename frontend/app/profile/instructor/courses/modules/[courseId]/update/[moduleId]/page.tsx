@@ -58,13 +58,13 @@ export default function UpdateModulePage() {
           body: JSON.stringify({ resource }),
         }
       );
-  
+
       if (response.ok) {
         alert('Resource marked as outdated.');
         setModule((prevModule) => ({
           ...prevModule,
           outdatedResources: [
-            ...(prevModule.outdatedResources || []), // Ensure it's an array
+            ...(prevModule.outdatedResources || []),
             resource,
           ],
         }));
@@ -77,7 +77,6 @@ export default function UpdateModulePage() {
       alert('An error occurred while marking the resource as outdated.');
     }
   }
-  
 
   async function handleUpdateModule(e: React.FormEvent) {
     e.preventDefault();
@@ -111,7 +110,7 @@ export default function UpdateModulePage() {
     <div style={styles.container}>
       <h1 style={styles.title}>Update Module</h1>
       {error && <p style={styles.error}>{error}</p>}
-      <form onSubmit={handleUpdateModule} style={styles.form}>
+      <form onSubmit={handleUpdateModule} style={styles.form as React.CSSProperties}>
         <label style={styles.label}>
           Title:
           <input
@@ -137,16 +136,16 @@ export default function UpdateModulePage() {
             <div key={index} style={styles.resourceItem}>
               <span>{resource}</span>
               {module.outdatedResources?.includes(resource) ? (
-  <span style={styles.outdatedLabel}>Outdated</span>
-) : (
-  <button
-    type="button"
-    onClick={() => handleMarkOutdated(resource)}
-    style={styles.outdatedButton}
-  >
-    Mark as Outdated
-  </button>
-)}
+                <span style={styles.outdatedLabel}>Outdated</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleMarkOutdated(resource)}
+                  style={styles.outdatedButton}
+                >
+                  Mark as Outdated
+                </button>
+              )}
             </div>
           ))}
           <input
@@ -170,11 +169,11 @@ const styles = {
     fontSize: '2rem',
     fontWeight: 'bold',
     marginBottom: '1.5rem',
-    textAlign: 'center', // Fixed TypeScript error
+    textAlign: 'center' as const,
     color: '#333',
   },
-  error: { color: 'red', marginBottom: '1rem', textAlign: 'center' },
-  form: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+  error: { color: 'red', marginBottom: '1rem', textAlign: 'center' as const },
+  form: { display: 'flex', flexDirection: 'column' as const, gap: '1rem' },
   label: { fontWeight: 'bold', color: '#555', marginBottom: '0.5rem' },
   resourceItem: { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' },
   outdatedLabel: { color: 'red', fontWeight: 'bold' },
