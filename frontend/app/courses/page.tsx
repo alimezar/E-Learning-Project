@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 
-
 export default function CoursesPage() {
   const [courses, setCourses] = useState<any[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<any[]>([]);
@@ -80,22 +79,41 @@ export default function CoursesPage() {
       console.log('User ID:', userId);
 
       // Send enrollment request to the backend
-      const response = await fetch(`http://localhost:3001/users/${userId}/enroll/${courseId}`, {
+      const enrollResponse = await fetch(`http://localhost:3001/users/${userId}/enroll/${courseId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ courseId })
+        body: JSON.stringify({ courseId }),
       });
 
-      const result = await response.json();
-      console.log('Backend response:', result);
+      const enrollResult = await enrollResponse.json();
+      console.log('Backend enrollment response:', enrollResult);
 
-      if (response.ok) {
-        setEnrolledCourses([...enrolledCourses, courseId]);
-        setConfirmationMessage(result.message || 'Successfully enrolled in the course!');
+      if (enrollResponse.ok) {
+        // Enrollment successful, initialize progress
+        try {
+          const initProgressResponse = await fetch(`http://localhost:3001/progress`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId, courseId }),
+          });
+
+          if (!initProgressResponse.ok) throw new Error('Failed to initialize progress.');
+
+          const progressResult = await initProgressResponse.json();
+          console.log('Progress initialized:', progressResult);
+
+          setEnrolledCourses([...enrolledCourses, courseId]);
+          setConfirmationMessage(enrollResult.message || 'Successfully enrolled in the course and progress initialized!');
+        } catch (progressError) {
+          console.error('Error initializing progress:', progressError);
+          setConfirmationMessage('Enrolled in the course, but failed to initialize progress.');
+        }
       } else {
-        setConfirmationMessage(result.message || 'Failed to enroll in the course.');
+        setConfirmationMessage(enrollResult.message || 'Failed to enroll in the course.');
       }
     } catch (error) {
       console.error('Failed to parse user cookie or enroll in course:', error);

@@ -12,41 +12,23 @@ interface StudentProgress {
   studentId: string;
   studentName: string;
   progress: number; // progress as percentage
+  averageScore: number; // average score
 }
 
 export default function InstructorProgressPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedCourseTitle, setSelectedCourseTitle] = useState<string | null>(null);
   const [studentProgress, setStudentProgress] = useState<StudentProgress[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Check if the user is authenticated
-    const cookies = document.cookie.split('; ');
-    const userCookie = cookies.find((cookie) => cookie.startsWith('user='));
-
-    if (!userCookie) {
-      setError('User is not authenticated. Please log in.');
-      return;
-    }
-
-    try {
-      const userData = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
-      if (userData.role !== 'instructor') {
-        setError('Access restricted to instructors only.');
-        return;
-      }
-
-      setUserId(userData.id);
-    } catch (err) {
-      console.error('Failed to parse user cookie:', err);
-      setError('An error occurred while validating user authentication.');
-    }
-  }, []);
+  const [totalStudents, setTotalStudents] = useState<number>(0);
+  const [completedStudents, setCompletedStudents] = useState<number>(0);
+  const [averageCompletedPercentage, setAverageCompletedPercentage] = useState<number>(0);
 
   useEffect(() => {
-    // Fetch all courses
+    // Fetch courses
     async function fetchCourses() {
       try {
         const response = await fetch('http://localhost:3001/courses', {
@@ -70,7 +52,7 @@ export default function InstructorProgressPage() {
   }, []);
 
   useEffect(() => {
-    // Fetch all progress and filter by selected course, then fetch user names
+    // Fetch student progress
     async function fetchStudentProgress() {
       if (!selectedCourseId) return;
 
@@ -91,7 +73,23 @@ export default function InstructorProgressPage() {
           (progress: any) => progress.courseId === selectedCourseId
         );
 
-        // Fetch user names for each student
+        // Calculate total and completed student counts
+        setTotalStudents(filteredProgress.length);
+        setCompletedStudents(
+          filteredProgress.filter((progress: any) => progress.completedPercentage === 100).length
+        );
+
+        // Calculate average completion percentage
+        const totalPercentage = filteredProgress.reduce(
+          (sum: number, progress: any) => sum + progress.completedPercentage,
+          0
+        );
+        const averagePercentage = filteredProgress.length > 0
+          ? totalPercentage / filteredProgress.length
+          : 0;
+        setAverageCompletedPercentage(averagePercentage);
+
+        // Fetch user names and attach them to the progress data
         const progressWithNames = await Promise.all(
           filteredProgress.map(async (progress: any) => {
             try {
@@ -113,6 +111,7 @@ export default function InstructorProgressPage() {
                 studentId: progress.userId,
                 studentName: userData.name || 'Unknown',
                 progress: progress.completedPercentage || 0,
+                averageScore: progress.averageScore || 0,
               };
             } catch (err) {
               console.error('Error fetching user data:', err);
@@ -120,12 +119,17 @@ export default function InstructorProgressPage() {
                 studentId: progress.userId,
                 studentName: 'Unknown',
                 progress: progress.completedPercentage || 0,
+                averageScore: progress.averageScore || 0,
               };
             }
           })
         );
 
         setStudentProgress(progressWithNames);
+
+        // Set the title of the selected course
+        const selectedCourse = courses.find((course) => course._id === selectedCourseId);
+        setSelectedCourseTitle(selectedCourse?.title || null);
       } catch (err) {
         console.error('Error fetching student progress:', err);
         setError('An error occurred while fetching student progress.');
@@ -133,7 +137,7 @@ export default function InstructorProgressPage() {
     }
 
     fetchStudentProgress();
-  }, [selectedCourseId]);
+  }, [selectedCourseId, courses]);
 
   if (error) {
     return <p style={{ color: 'red' }}>{error}</p>;
@@ -163,6 +167,14 @@ export default function InstructorProgressPage() {
         </select>
       </div>
 
+      {selectedCourseId && (
+        <div style={{ marginBottom: '20px' }}>
+          <p>Total Students: {totalStudents}</p>
+          <p>Completed Students: {completedStudents}</p>
+          <p>Average Completion Percentage: {averageCompletedPercentage.toFixed(2)}%</p>
+        </div>
+      )}
+
       {selectedCourseId && studentProgress.length > 0 && (
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -185,6 +197,15 @@ export default function InstructorProgressPage() {
               >
                 Progress (%)
               </th>
+              <th
+                style={{
+                  borderBottom: '1px solid #ddd',
+                  padding: '8px',
+                  textAlign: 'left',
+                }}
+              >
+                Average Score
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -205,6 +226,14 @@ export default function InstructorProgressPage() {
                   }}
                 >
                   {progress.progress}%
+                </td>
+                <td
+                  style={{
+                    borderBottom: '1px solid #ddd',
+                    padding: '8px',
+                  }}
+                >
+                  {progress.averageScore}
                 </td>
               </tr>
             ))}
