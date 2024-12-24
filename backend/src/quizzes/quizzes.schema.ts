@@ -17,9 +17,6 @@ export class Quizzes {
   @Prop({ type: String, default: "both", enum: ["mcq", "trueFalse", "both"]})
   type: string
 
-  @Prop({ type: String, default: "easy", enum: ["easy", "medium", "hard"]})
-  difficulty: string
-
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Questions'}], required: true })
   questions: Types.ObjectId[];
   

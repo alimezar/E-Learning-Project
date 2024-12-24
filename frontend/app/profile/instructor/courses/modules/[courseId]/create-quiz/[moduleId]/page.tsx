@@ -1,5 +1,3 @@
-//Vizarde 7ot el code beta3 creating the quizzes here "use client";
-
 import { useState } from "react";
 
 export default function InitiateQuiz() {
