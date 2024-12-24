@@ -64,7 +64,7 @@ const NavBar = () => {
       </Link>
       {userId && (
         <Link href={`/chat/${userId}`} style={styles.link}>
-          Chat
+          Chat With TA
         </Link>
       )}
 

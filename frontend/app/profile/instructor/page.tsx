@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
 import Link from 'next/link';
 
 interface Course {
@@ -14,6 +16,7 @@ interface Course {
 }
 
 export default function InstructorDashboard() {
+
   const [username, setUsername] = useState<string>('Guest');
   const [role, setRole] = useState<string | null>(null);
   const [taughtCourses, setTaughtCourses] = useState<Course[]>([]);

@@ -64,6 +64,7 @@ export default function UpdateCourse({ params }: { params: { courseId: string } 
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(course),
       });
   

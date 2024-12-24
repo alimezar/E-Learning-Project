@@ -30,81 +30,172 @@ export class QuizService {
     if (!quizData.moduleId) {
       throw new BadRequestException('moduleId is required');
     }
-  
+
     const moduleId = new Types.ObjectId(quizData.moduleId); // Convert to ObjectId
-  
+
     if (!quizData.userId) {
       throw new BadRequestException('userId is required');
     }
-  
+
     const userId = new Types.ObjectId(quizData.userId); // Convert userId to ObjectId
-  
+
     // Retrieve the module directly and extract the courseId
     const module = await this.moduleModel.findById(moduleId).exec();
     if (!module) {
       throw new BadRequestException(`Module with ID "${quizData.moduleId}" not found.`);
     }
-  
+
     console.log(`Fetched module: ${JSON.stringify(module)}`); // Log full module
-  
+
     const courseId = module.course_id ? new Types.ObjectId(module.course_id) : null;
     if (!courseId) {
       throw new BadRequestException('The associated course ID is missing from the module.');
     }
-  
+
     console.log(`Looking for progress with userId: ${userId} and courseId: ${courseId}`); // Debug log
-  
-    // Fetch progress for the user in the course
-    const progress = await this.progressModel
-      .findOne({ userId, courseId })
-      .exec();
-  
+
+    // Fetch the user's role
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new BadRequestException(`User with ID "${quizData.userId}" not found.`);
+    }
+
+    // If the user is an instructor, skip progress checks and create the quiz directly
+    if (user.role === 'instructor') {
+      console.log('User is an instructor; skipping progress validation.');
+
+      const size = quizData.size ?? 5;
+      const type = quizData.type ?? 'both';
+
+      // Fetch random questions matching the module and type
+
+      let questions;
+
+      if(type != "both"){
+        questions = await this.questionModel.aggregate([
+          { $match: { moduleId: quizData.moduleId.toString(), type } },
+          { $sample: { size } },
+        ]);
+      }
+
+      else{
+        questions = await this.questionModel.aggregate([
+          { $match: { moduleId: quizData.moduleId.toString() } },
+          { $sample: { size } },
+        ]);
+      }
+
+
+
+      if (questions.length < size) {
+        throw new BadRequestException('Not enough questions available for the quiz.');
+      }
+
+      console.log(`Fetched ${questions.length} questions for quiz creation.`);
+
+      // Create and save the new quiz
+      const newQuiz = new this.quizModel({
+        ...quizData,
+        userId,
+        moduleId,
+        questions,
+        type,
+      });
+
+      return newQuiz.save();
+    }
+
+    // For students, fetch the quiz created by the instructor
+    const instructorQuiz = await this.quizModel
+    .findOne({
+      moduleId,
+      userId: { 
+        $in: await this.userModel
+          .find({ role: 'instructor' }, '_id') // Fetch all instructors' IDs
+          .exec()
+          .then((users) => users.map((user) => user._id)) // Extract their IDs
+      },
+    })
+    .exec();
+
+    if (!instructorQuiz) {
+      throw new BadRequestException(
+        `No instructor quiz found for moduleId "${quizData.moduleId}".`
+      );
+    }
+
+    const size = instructorQuiz.size ?? 5;
+    const type = instructorQuiz.type ?? "both";
+
+    // Fetch the student's progress
+    const progress = await this.progressModel.findOne({ userId, courseId }).exec();
+
     if (!progress) {
       throw new BadRequestException(
         `Progress not found for userId "${quizData.userId}" and courseId "${courseId}".`
       );
     }
-  
+
     if (progress.averageScore === undefined || progress.averageScore === null) {
       throw new BadRequestException(
         'Progress record exists but averageScore is missing or invalid.'
       );
     }
-  
+
     const averageScore = progress.averageScore;
-  
+
     // Determine quiz difficulty based on averageScore
     let difficulty: string;
-    if (averageScore < 2) {
+    const totalQuestions = size;
+    const scorePercentage = (averageScore / totalQuestions) * 100;
+
+    console.log('totalQuestions: ' + totalQuestions);
+    console.log('scorePercentage: ' + scorePercentage);
+
+    if (scorePercentage < 40) {
       difficulty = 'easy';
-    } else if (averageScore >= 2 && averageScore < 4) {
+    } else if (scorePercentage >= 40 && scorePercentage < 80) {
       difficulty = 'medium';
     } else {
       difficulty = 'hard';
     }
-  
-    // Fetch 5 random questions matching the module and difficulty
-    const questions = await this.questionModel.aggregate([
-      { $match: { moduleId, difficulty } }, // Match by moduleId and difficulty
-      { $sample: { size: 5 } }, // Randomly select 5 questions
-    ]);
-  
-    if (questions.length < 5) {
+
+    // Fetch random questions matching the module, type, and difficulty
+    let questions;
+
+    if(type != "both"){
+      questions = await this.questionModel.aggregate([
+        { $match: { moduleId: quizData.moduleId.toString(), type } },
+        { $sample: { size } },
+      ]);
+    }
+
+    else{
+      questions = await this.questionModel.aggregate([
+        { $match: { moduleId: quizData.moduleId.toString() } },
+        { $sample: { size } },
+      ]);
+    }
+
+    if (questions.length < totalQuestions) {
       throw new BadRequestException('Not enough questions available for the quiz.');
     }
-  
+
     console.log(`Fetched ${questions.length} questions for quiz creation.`);
-  
+
     // Create and save the new quiz
     const newQuiz = new this.quizModel({
       ...quizData,
       userId,
       moduleId,
       questions,
+      type,
     });
-  
+
     return newQuiz.save();
   }
+
+
     
   // Get all quizzes
   async getQuizzes(): Promise<Quizzes[]> {
@@ -145,4 +236,22 @@ export class QuizService {
       throw new NotFoundException(`Quiz with ID "${quizId}" not found.`);
     }
   }
+
+   // Fetch quizzes by moduleId and creator role
+   async getQuizzesByModuleAndRole(moduleId: string, role?: string): Promise<QuizDocument[]> {
+    const filter: any = { moduleId: new Types.ObjectId(moduleId) };
+
+    if (role) {
+      // If role is specified, populate `userId` and filter by role
+      filter['userId.role'] = role;
+    }
+
+    const quizzes = await this.quizModel.find(filter).populate('userId').exec();
+    if (!quizzes || quizzes.length === 0) {
+      throw new NotFoundException('No quizzes found for the given module and role.');
+    }
+
+    return quizzes;
+  }
+  
 }

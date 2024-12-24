@@ -5,11 +5,17 @@ export type QuestionDocument = Questions & Document;
 
 @Schema()
 export class Questions {
+  @Prop({ type: Types.ObjectId, ref: 'Users', required: true }) // Reference to Users schema
+  userId: Types.ObjectId;
+
   @Prop({ type: Types.ObjectId, ref: 'Module', required: true }) 
   moduleId: Types.ObjectId;
 
   @Prop({ type: String, required: true })
   difficulty: string;
+
+  @Prop({ type: String, required: true })
+  type: string;
 
   @Prop({ type: String, required: true })
   question: string;

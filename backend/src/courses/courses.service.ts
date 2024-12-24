@@ -240,6 +240,16 @@ async getCourseModules(courseId: string): Promise<any[]> {
     return course.modules as unknown as Module[];
   }
   
+  async toggleCourseAvailability(courseId: string): Promise<void> {
+    const course = await this.courseModel.findById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found.');
+    }
+  
+    // Toggle the `unavailable` field
+    course.unavailable = !course.unavailable;
+    await course.save();
+  }
   
   
   
@@ -269,8 +279,12 @@ async markCourseUnavailable(courseId: string): Promise<void> {
 
 
   // Delete a course by ID
-  async deleteCourse(id: string): Promise<void> {
-    await this.courseModel.findByIdAndDelete(id).exec();
+  async deleteCourse(courseId: string): Promise<void> {
+    const course = await this.courseModel.findById(courseId);
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found.`);
+    }
+    await this.courseModel.findByIdAndDelete(courseId);
   }
 
   async searchCourses(query: string): Promise<Course[]> {
@@ -322,27 +336,21 @@ async searchInstructorInCourse(courseId: string, email: string): Promise<Users[]
 }
 // Get courses taught by a specific instructor
 async getTaughtCourses(instructorId: string): Promise<Course[]> {
-  console.log('Service: Fetching taught courses for instructor', instructorId);
-
-  // Validate instructor ID
   if (!mongoose.Types.ObjectId.isValid(instructorId)) {
-    console.error('Invalid instructor ID:', instructorId);
     throw new BadRequestException('Invalid instructor ID format.');
   }
 
-  // Fetch instructor document
   const instructor = await this.userModel.findById(instructorId).exec();
   if (!instructor) {
-    console.error('Instructor not found:', instructorId);
     throw new NotFoundException('Instructor not found.');
   }
 
-  // Fetch courses based on the `coursesTaught` array
-  const courses = await this.courseModel.find({ _id: { $in: instructor.coursesTaught } }).exec();
-  console.log('Courses fetched:', courses);
-
-  return courses;
+  return this.courseModel.find({
+    _id: { $in: instructor.coursesTaught },
+    unavailable: { $ne: true }, // Exclude unavailable courses
+  }).exec();
 }
+
 
 
 
@@ -351,6 +359,7 @@ async getTaughtCourses(instructorId: string): Promise<Course[]> {
 // Get courses without an assigned instructor
 async getTeachableCourses(): Promise<Course[]> {
   return this.courseModel.find({
+    unavailable: { $ne: true }, // Exclude unavailable courses
     $or: [
       { createdById: { $exists: false } },
       { createdById: null },

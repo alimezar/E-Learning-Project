@@ -106,7 +106,12 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
   
-    return await this.courseModel.find({ _id: { $in: user.enrolledCourses } }).exec();
+    // Fetch all enrolled courses for the user
+    const enrolledCourses = await this.courseModel.find({ _id: { $in: user.enrolledCourses } }).exec();
+  
+    // Filter out unavailable courses
+    return enrolledCourses.filter((course) => !course.unavailable);
   }
+  
   
 }

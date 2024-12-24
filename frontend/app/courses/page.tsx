@@ -14,7 +14,9 @@ export default function CoursesPage() {
     const fetchCourses = async () => {
       try {
         console.log('Fetching courses...');
-        const response = await fetch('http://localhost:3001/courses');
+        const response = await fetch('http://localhost:3001/courses', {
+          credentials: 'include', // Include cookies for authentication
+        });
         const data = await response.json();
 
         if (response.ok) {

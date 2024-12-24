@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param } from '@nestjs/common';
+import { Controller, Post, Get,Put,Delete, Body, Param } from '@nestjs/common';
 import { ThreadService } from './thread.service';
 
 @Controller('threads')
@@ -24,5 +24,21 @@ export class ThreadController {
 searchThreadsByTitle(@Param('title') title: string) {
   return this.threadService.searchThreadsByTitle(title);
 }
+
+@Put(':id')
+  async updateThread(
+    @Param('id') threadId: string,
+    @Body() updateData: { title?: string; content?: string; userId: string; role: string }
+  ) {
+    return this.threadService.updateThread(threadId, updateData.userId, updateData.role, updateData);
+  }
+
+  @Delete(':id')
+  async deleteThread(
+    @Param('id') threadId: string,
+    @Body() deleteData: { userId: string; role: string }
+  ) {
+    return this.threadService.deleteThread(threadId, deleteData.userId, deleteData.role);
+  }
 
 }
