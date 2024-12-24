@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Course {
   _id: string;
@@ -26,6 +27,8 @@ export default function InstructorProgressPage() {
   const [totalStudents, setTotalStudents] = useState<number>(0);
   const [completedStudents, setCompletedStudents] = useState<number>(0);
   const [averageCompletedPercentage, setAverageCompletedPercentage] = useState<number>(0);
+
+  const router = useRouter();
 
   useEffect(() => {
     // Fetch courses
@@ -139,6 +142,14 @@ export default function InstructorProgressPage() {
     fetchStudentProgress();
   }, [selectedCourseId, courses]);
 
+  const handleViewCourseDetails = () => {
+    if (selectedCourseId) {
+      router.push(`/progress/instructor/courses?courseId=${selectedCourseId}`);
+    } else {
+      alert('Please select a course first.');
+    }
+  };
+
   if (error) {
     return <p style={{ color: 'red' }}>{error}</p>;
   }
@@ -166,6 +177,21 @@ export default function InstructorProgressPage() {
           ))}
         </select>
       </div>
+
+      {selectedCourseId && (
+        <button
+          onClick={handleViewCourseDetails}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#007BFF',
+            color: '#FFF',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          View Course Details
+        </button>
+      )}
 
       {selectedCourseId && (
         <div style={{ marginBottom: '20px' }}>
