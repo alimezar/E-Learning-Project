@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { LogsModule } from '../logs/logs.module';
 import * as dotenv from 'dotenv';
+import { AuthorizationGuard } from './guards/authorization.guard';
 dotenv.config();
 
 @Module({

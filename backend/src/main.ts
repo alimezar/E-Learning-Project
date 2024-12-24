@@ -4,6 +4,8 @@ import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as cookieParser from 'cookie-parser';
+
 
 
 dotenv.config(); 
@@ -11,7 +13,7 @@ dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-
+  app.use(cookieParser());
   // Use static assets for serving uploaded files
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads',

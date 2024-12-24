@@ -9,11 +9,11 @@ export class LogsService {
 
   // Create a log entry
   async createLog(
-    type: 'failed_login' | 'unauthorized_access',
+    type: 'failed_login' | 'unauthorized_access' | 'instructor_request',
     message: string,
     ip: string,
     userId?: string,
-    email?: string, // Optional email field
+    email?: string,
   ): Promise<Logs> {
     const log = new this.logModel({ type, message, ip, userId, email });
     return log.save();
@@ -23,4 +23,12 @@ export class LogsService {
   async getAllLogs(limit = 50): Promise<Logs[]> {
     return this.logModel.find().sort({ timestamp: -1 }).limit(limit).exec();
   }
+
+  async deleteLog(type: 'instructor_request', userId: string): Promise<void> {
+    await this.logModel.deleteOne({ type, userId }).exec();
+  }
+  async getLogByUserId(userId: string, type: 'instructor_request'): Promise<Logs | null> {
+    return this.logModel.findOne({ userId, type }).exec();
+  }
+  
 }

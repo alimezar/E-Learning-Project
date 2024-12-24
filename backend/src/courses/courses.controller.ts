@@ -1,18 +1,22 @@
-import { Controller, Post, Get, Body, Param, Put, Delete, Query,UnauthorizedException, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Put, Delete, Query,UnauthorizedException, HttpException, HttpStatus, BadRequestException, UseGuards } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { Course } from './courses.schema';
 import { Users } from 'src/users/users.schema';
-import { Module, ModuleDocument } from '../modules/modules.schema'; // Adjust the path to the correct location
+import { Module, ModuleDocument } from '../modules/modules.schema';
+import { AuthorizationGuard } from '../auth/guards/authorization.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import mongoose from 'mongoose';
 
 
 @Controller('courses')
+@UseGuards(AuthorizationGuard)
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
   
 // Create a new course
 @Post()
+@Roles('instructor') // RBAC Series
 async createCourse(@Body() courseData: Partial<Course>): Promise<Course> {
   try {
     return await this.coursesService.createCourse(courseData);
@@ -22,12 +26,14 @@ async createCourse(@Body() courseData: Partial<Course>): Promise<Course> {
 }
 
 @Get(':courseId/versions')
+@Roles('instructor', 'admin') 
 async getCourseVersions(@Param('courseId') courseId: string): Promise<any[]> {
   return await this.coursesService.getCourseVersions(courseId);
 }
 
 
 @Put(':courseId/unavailable')
+@Roles('instructor', 'admin') 
 async markCourseUnavailable(@Param('courseId') courseId: string): Promise<void> {
   try {
     await this.coursesService.markCourseUnavailable(courseId);
@@ -58,11 +64,13 @@ async getTeachableCourses(): Promise<Course[]> {
 
   // Get all courses
   @Get()
+  @Roles('instructor', 'student','admin') // RBAC Series
   async getAllCourses(): Promise<Course[]> {
     return this.coursesService.getAllCourses();
   }
 // Get Course Multi-Media resources
 @Get(':courseId/resources')
+@Roles('student', 'instructor', 'admin') 
 async getMultiMediaResources(
   @Param('courseId') courseId: string,
 ): Promise<string[]> {
@@ -70,6 +78,7 @@ async getMultiMediaResources(
 }
 
 @Get(':courseId/modules/details')
+@Roles('student', 'instructor', 'admin') 
 async getCourseModulesWithDetails(
   @Param('courseId') courseId: string,
 ): Promise<{ courseId: string; modules: Module[] }> {
@@ -77,6 +86,7 @@ async getCourseModulesWithDetails(
 }
 
 @Put(':courseId/toggle-availability')
+@Roles('instructor', 'admin') // RBAC Series
 async toggleCourseAvailability(@Param('courseId') courseId: string): Promise<void> {
   try {
     await this.coursesService.toggleCourseAvailability(courseId);
@@ -88,11 +98,13 @@ async toggleCourseAvailability(@Param('courseId') courseId: string): Promise<voi
 
 // Get Course Modules 
 @Get(':courseId/modules')
+@Roles('student', 'instructor', 'admin') 
 async getCourseModules(@Param('courseId') courseId: string): Promise<Module[]> {
   return this.coursesService.getModulesByCourse(courseId);
 }
 
   @Get('user/:userId')
+  @Roles('student', 'instructor', 'admin') 
 async getUserCourses(@Param('userId') userId: string): Promise<Course[]> {
   return this.coursesService.getCoursesByUserId(userId);
 }
@@ -104,7 +116,8 @@ async getUserCourses(@Param('userId') userId: string): Promise<Course[]> {
   }
 
   // Update a course by ID
-  @Put(':courseId')
+@Put(':courseId')
+@Roles('instructor', 'admin') // RBAC Series
 async updateCourse(
   @Param('courseId') courseId: string,
   @Body() updateData: Partial<Course>,
@@ -114,9 +127,12 @@ async updateCourse(
 }
 
   // Delete a course by ID
-  @Delete(':id')
-  async deleteCourse(@Param('id') id: string): Promise<void> {
-    return this.coursesService.deleteCourse(id);
+  @Delete(':courseId')
+  @UseGuards(AuthorizationGuard)
+  @Roles('admin') // Only admins can delete courses
+  async deleteCourse(@Param('courseId') courseId: string): Promise<{ message: string }> {
+    await this.coursesService.deleteCourse(courseId);
+    return { message: 'Course deleted successfully' };
   }
   // Search courses by query
 @Get('search/:query')
