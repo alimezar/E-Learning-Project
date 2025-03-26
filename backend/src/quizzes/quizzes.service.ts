@@ -165,14 +165,14 @@ export class QuizService {
 
     if(type != "both"){
       questions = await this.questionModel.aggregate([
-        { $match: { moduleId: quizData.moduleId.toString(), type } },
+        { $match: { moduleId: quizData.moduleId.toString(), type, difficulty } },
         { $sample: { size } },
       ]);
     }
 
     else{
       questions = await this.questionModel.aggregate([
-        { $match: { moduleId: quizData.moduleId.toString() } },
+        { $match: { moduleId: quizData.moduleId.toString(), difficulty } },
         { $sample: { size } },
       ]);
     }
