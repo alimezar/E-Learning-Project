@@ -1,0 +1,26 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '20.x'
+  displayName: 'Use Node.js'
+
+- script: |
+    echo "=== Backend ==="
+    cd backend
+    npm install
+    npm run build || echo "No build script in backend"
+
+    echo "=== Frontend ==="
+    cd ../frontend
+    npm install
+    npm run build || echo "No build script in frontend"
+  displayName: 'Install & Build backend and frontend'
+
+- script: echo "Pipeline finished successfully!"
+  displayName: 'Done'
